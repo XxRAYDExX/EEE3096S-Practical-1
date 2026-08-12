@@ -1,0 +1,765 @@
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"stm32f0xx_hal_flash.c"
+  14              		.text
+  15              		.section	.text.FLASH_Program_HalfWord,"ax",%progbits
+  16              		.align	1
+  17              		.syntax unified
+  18              		.code	16
+  19              		.thumb_func
+  21              	FLASH_Program_HalfWord:
+  22              		@ args = 0, pretend = 0, frame = 0
+  23              		@ frame_needed = 0, uses_anonymous_args = 0
+  24 0000 10B5     		push	{r4, lr}
+  25 0002 054B     		ldr	r3, .L2
+  26 0004 0022     		movs	r2, #0
+  27 0006 DA61     		str	r2, [r3, #28]
+  28 0008 044A     		ldr	r2, .L2+4
+  29 000a 1369     		ldr	r3, [r2, #16]
+  30 000c 0124     		movs	r4, #1
+  31 000e 2343     		orrs	r3, r4
+  32 0010 1361     		str	r3, [r2, #16]
+  33 0012 0180     		strh	r1, [r0]
+  34              		@ sp needed
+  35 0014 10BD     		pop	{r4, pc}
+  36              	.L3:
+  37 0016 C046     		.align	2
+  38              	.L2:
+  39 0018 00000000 		.word	pFlash
+  40 001c 00200240 		.word	1073881088
+  42              		.section	.text.FLASH_SetErrorCode,"ax",%progbits
+  43              		.align	1
+  44              		.syntax unified
+  45              		.code	16
+  46              		.thumb_func
+  48              	FLASH_SetErrorCode:
+  49              		@ args = 0, pretend = 0, frame = 0
+  50              		@ frame_needed = 0, uses_anonymous_args = 0
+  51              		@ link register save eliminated.
+  52 0000 0D4B     		ldr	r3, .L8
+  53 0002 DA68     		ldr	r2, [r3, #12]
+  54 0004 1021     		movs	r1, #16
+  55 0006 0B00     		movs	r3, r1
+  56 0008 1340     		ands	r3, r2
+  57 000a 1142     		tst	r1, r2
+  58 000c 05D0     		beq	.L5
+  59 000e 0B4A     		ldr	r2, .L8+4
+  60 0010 D369     		ldr	r3, [r2, #28]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 2
+
+
+  61 0012 0E39     		subs	r1, r1, #14
+  62 0014 0B43     		orrs	r3, r1
+  63 0016 D361     		str	r3, [r2, #28]
+  64 0018 1023     		movs	r3, #16
+  65              	.L5:
+  66 001a 074A     		ldr	r2, .L8
+  67 001c D268     		ldr	r2, [r2, #12]
+  68 001e 5207     		lsls	r2, r2, #29
+  69 0020 06D5     		bpl	.L6
+  70 0022 0649     		ldr	r1, .L8+4
+  71 0024 CA69     		ldr	r2, [r1, #28]
+  72 0026 0120     		movs	r0, #1
+  73 0028 0243     		orrs	r2, r0
+  74 002a CA61     		str	r2, [r1, #28]
+  75 002c 0422     		movs	r2, #4
+  76 002e 1343     		orrs	r3, r2
+  77              	.L6:
+  78 0030 014A     		ldr	r2, .L8
+  79 0032 D360     		str	r3, [r2, #12]
+  80              		@ sp needed
+  81 0034 7047     		bx	lr
+  82              	.L9:
+  83 0036 C046     		.align	2
+  84              	.L8:
+  85 0038 00200240 		.word	1073881088
+  86 003c 00000000 		.word	pFlash
+  88              		.section	.text.HAL_FLASH_Program_IT,"ax",%progbits
+  89              		.align	1
+  90              		.global	HAL_FLASH_Program_IT
+  91              		.syntax unified
+  92              		.code	16
+  93              		.thumb_func
+  95              	HAL_FLASH_Program_IT:
+  96              		@ args = 0, pretend = 0, frame = 0
+  97              		@ frame_needed = 0, uses_anonymous_args = 0
+  98 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+  99 0002 0700     		movs	r7, r0
+ 100 0004 0800     		movs	r0, r1
+ 101 0006 1400     		movs	r4, r2
+ 102 0008 2100     		movs	r1, r4
+ 103 000a 1A00     		movs	r2, r3
+ 104 000c 154B     		ldr	r3, .L18
+ 105 000e 1B7E     		ldrb	r3, [r3, #24]
+ 106 0010 012B     		cmp	r3, #1
+ 107 0012 25D0     		beq	.L15
+ 108 0014 134B     		ldr	r3, .L18
+ 109 0016 0124     		movs	r4, #1
+ 110 0018 1C76     		strb	r4, [r3, #24]
+ 111 001a 134C     		ldr	r4, .L18+4
+ 112 001c 2569     		ldr	r5, [r4, #16]
+ 113 001e A026     		movs	r6, #160
+ 114 0020 7601     		lsls	r6, r6, #5
+ 115 0022 3543     		orrs	r5, r6
+ 116 0024 2561     		str	r5, [r4, #16]
+ 117 0026 9860     		str	r0, [r3, #8]
+ 118 0028 1961     		str	r1, [r3, #16]
+ 119 002a 5A61     		str	r2, [r3, #20]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 3
+
+
+ 120 002c 012F     		cmp	r7, #1
+ 121 002e 0BD0     		beq	.L16
+ 122 0030 022F     		cmp	r7, #2
+ 123 0032 0FD0     		beq	.L17
+ 124 0034 0B4B     		ldr	r3, .L18
+ 125 0036 0524     		movs	r4, #5
+ 126 0038 1C70     		strb	r4, [r3]
+ 127 003a 013C     		subs	r4, r4, #1
+ 128 003c 5C60     		str	r4, [r3, #4]
+ 129              	.L13:
+ 130 003e 89B2     		uxth	r1, r1
+ 131 0040 FFF7FEFF 		bl	FLASH_Program_HalfWord
+ 132 0044 0020     		movs	r0, #0
+ 133              	.L11:
+ 134              		@ sp needed
+ 135 0046 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 136              	.L16:
+ 137 0048 064B     		ldr	r3, .L18
+ 138 004a 0324     		movs	r4, #3
+ 139 004c 1C70     		strb	r4, [r3]
+ 140 004e 023C     		subs	r4, r4, #2
+ 141 0050 5C60     		str	r4, [r3, #4]
+ 142 0052 F4E7     		b	.L13
+ 143              	.L17:
+ 144 0054 034B     		ldr	r3, .L18
+ 145 0056 0424     		movs	r4, #4
+ 146 0058 1C70     		strb	r4, [r3]
+ 147 005a 023C     		subs	r4, r4, #2
+ 148 005c 5C60     		str	r4, [r3, #4]
+ 149 005e EEE7     		b	.L13
+ 150              	.L15:
+ 151 0060 0220     		movs	r0, #2
+ 152 0062 F0E7     		b	.L11
+ 153              	.L19:
+ 154              		.align	2
+ 155              	.L18:
+ 156 0064 00000000 		.word	pFlash
+ 157 0068 00200240 		.word	1073881088
+ 159              		.section	.text.HAL_FLASH_EndOfOperationCallback,"ax",%progbits
+ 160              		.align	1
+ 161              		.weak	HAL_FLASH_EndOfOperationCallback
+ 162              		.syntax unified
+ 163              		.code	16
+ 164              		.thumb_func
+ 166              	HAL_FLASH_EndOfOperationCallback:
+ 167              		@ args = 0, pretend = 0, frame = 0
+ 168              		@ frame_needed = 0, uses_anonymous_args = 0
+ 169              		@ link register save eliminated.
+ 170              		@ sp needed
+ 171 0000 7047     		bx	lr
+ 173              		.section	.text.HAL_FLASH_OperationErrorCallback,"ax",%progbits
+ 174              		.align	1
+ 175              		.weak	HAL_FLASH_OperationErrorCallback
+ 176              		.syntax unified
+ 177              		.code	16
+ 178              		.thumb_func
+ 180              	HAL_FLASH_OperationErrorCallback:
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 4
+
+
+ 181              		@ args = 0, pretend = 0, frame = 0
+ 182              		@ frame_needed = 0, uses_anonymous_args = 0
+ 183              		@ link register save eliminated.
+ 184              		@ sp needed
+ 185 0000 7047     		bx	lr
+ 187              		.section	.text.HAL_FLASH_IRQHandler,"ax",%progbits
+ 188              		.align	1
+ 189              		.global	HAL_FLASH_IRQHandler
+ 190              		.syntax unified
+ 191              		.code	16
+ 192              		.thumb_func
+ 194              	HAL_FLASH_IRQHandler:
+ 195              		@ args = 0, pretend = 0, frame = 0
+ 196              		@ frame_needed = 0, uses_anonymous_args = 0
+ 197 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 198 0002 524B     		ldr	r3, .L42
+ 199 0004 DB68     		ldr	r3, [r3, #12]
+ 200 0006 DB06     		lsls	r3, r3, #27
+ 201 0008 03D4     		bmi	.L23
+ 202 000a 504B     		ldr	r3, .L42
+ 203 000c DB68     		ldr	r3, [r3, #12]
+ 204 000e 5B07     		lsls	r3, r3, #29
+ 205 0010 0CD5     		bpl	.L24
+ 206              	.L23:
+ 207 0012 4F4C     		ldr	r4, .L42+4
+ 208 0014 A368     		ldr	r3, [r4, #8]
+ 209 0016 1D00     		movs	r5, r3
+ 210 0018 0123     		movs	r3, #1
+ 211 001a 5B42     		rsbs	r3, r3, #0
+ 212 001c A360     		str	r3, [r4, #8]
+ 213 001e FFF7FEFF 		bl	FLASH_SetErrorCode
+ 214 0022 2800     		movs	r0, r5
+ 215 0024 FFF7FEFF 		bl	HAL_FLASH_OperationErrorCallback
+ 216 0028 0023     		movs	r3, #0
+ 217 002a 2370     		strb	r3, [r4]
+ 218              	.L24:
+ 219 002c 474B     		ldr	r3, .L42
+ 220 002e DB68     		ldr	r3, [r3, #12]
+ 221 0030 9B06     		lsls	r3, r3, #26
+ 222 0032 28D5     		bpl	.L25
+ 223 0034 454B     		ldr	r3, .L42
+ 224 0036 2022     		movs	r2, #32
+ 225 0038 DA60     		str	r2, [r3, #12]
+ 226 003a 454B     		ldr	r3, .L42+4
+ 227 003c 1B78     		ldrb	r3, [r3]
+ 228 003e 002B     		cmp	r3, #0
+ 229 0040 21D0     		beq	.L25
+ 230 0042 434B     		ldr	r3, .L42+4
+ 231 0044 1B78     		ldrb	r3, [r3]
+ 232 0046 012B     		cmp	r3, #1
+ 233 0048 2ED0     		beq	.L37
+ 234 004a 414B     		ldr	r3, .L42+4
+ 235 004c 1B78     		ldrb	r3, [r3]
+ 236 004e 022B     		cmp	r3, #2
+ 237 0050 4CD0     		beq	.L38
+ 238 0052 3F4B     		ldr	r3, .L42+4
+ 239 0054 5A68     		ldr	r2, [r3, #4]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 5
+
+
+ 240 0056 013A     		subs	r2, r2, #1
+ 241 0058 5A60     		str	r2, [r3, #4]
+ 242 005a 5B68     		ldr	r3, [r3, #4]
+ 243 005c 002B     		cmp	r3, #0
+ 244 005e 51D1     		bne	.L39
+ 245 0060 3B4B     		ldr	r3, .L42+4
+ 246 0062 1B78     		ldrb	r3, [r3]
+ 247 0064 032B     		cmp	r3, #3
+ 248 0066 65D0     		beq	.L40
+ 249 0068 394B     		ldr	r3, .L42+4
+ 250 006a 1B78     		ldrb	r3, [r3]
+ 251 006c 042B     		cmp	r3, #4
+ 252 006e 66D0     		beq	.L41
+ 253 0070 374B     		ldr	r3, .L42+4
+ 254 0072 9868     		ldr	r0, [r3, #8]
+ 255 0074 0638     		subs	r0, r0, #6
+ 256 0076 FFF7FEFF 		bl	HAL_FLASH_EndOfOperationCallback
+ 257              	.L31:
+ 258 007a 354B     		ldr	r3, .L42+4
+ 259 007c 0122     		movs	r2, #1
+ 260 007e 5242     		rsbs	r2, r2, #0
+ 261 0080 9A60     		str	r2, [r3, #8]
+ 262 0082 0022     		movs	r2, #0
+ 263 0084 1A70     		strb	r2, [r3]
+ 264              	.L25:
+ 265 0086 324B     		ldr	r3, .L42+4
+ 266 0088 1B78     		ldrb	r3, [r3]
+ 267 008a 002B     		cmp	r3, #0
+ 268 008c 0BD1     		bne	.L22
+ 269 008e 2F4B     		ldr	r3, .L42
+ 270 0090 1A69     		ldr	r2, [r3, #16]
+ 271 0092 0721     		movs	r1, #7
+ 272 0094 8A43     		bics	r2, r1
+ 273 0096 1A61     		str	r2, [r3, #16]
+ 274 0098 1A69     		ldr	r2, [r3, #16]
+ 275 009a 2E49     		ldr	r1, .L42+8
+ 276 009c 0A40     		ands	r2, r1
+ 277 009e 1A61     		str	r2, [r3, #16]
+ 278 00a0 2B4B     		ldr	r3, .L42+4
+ 279 00a2 0022     		movs	r2, #0
+ 280 00a4 1A76     		strb	r2, [r3, #24]
+ 281              	.L22:
+ 282              		@ sp needed
+ 283 00a6 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 284              	.L37:
+ 285 00a8 294B     		ldr	r3, .L42+4
+ 286 00aa 5A68     		ldr	r2, [r3, #4]
+ 287 00ac 013A     		subs	r2, r2, #1
+ 288 00ae 5A60     		str	r2, [r3, #4]
+ 289 00b0 5B68     		ldr	r3, [r3, #4]
+ 290 00b2 002B     		cmp	r3, #0
+ 291 00b4 11D0     		beq	.L27
+ 292 00b6 264C     		ldr	r4, .L42+4
+ 293 00b8 A068     		ldr	r0, [r4, #8]
+ 294 00ba FFF7FEFF 		bl	HAL_FLASH_EndOfOperationCallback
+ 295 00be A068     		ldr	r0, [r4, #8]
+ 296 00c0 8023     		movs	r3, #128
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 6
+
+
+ 297 00c2 DB00     		lsls	r3, r3, #3
+ 298 00c4 9C46     		mov	ip, r3
+ 299 00c6 6044     		add	r0, r0, ip
+ 300 00c8 A060     		str	r0, [r4, #8]
+ 301 00ca 204A     		ldr	r2, .L42
+ 302 00cc 1369     		ldr	r3, [r2, #16]
+ 303 00ce 0221     		movs	r1, #2
+ 304 00d0 8B43     		bics	r3, r1
+ 305 00d2 1361     		str	r3, [r2, #16]
+ 306 00d4 FFF7FEFF 		bl	FLASH_PageErase
+ 307 00d8 D5E7     		b	.L25
+ 308              	.L27:
+ 309 00da 1D4B     		ldr	r3, .L42+4
+ 310 00dc 0120     		movs	r0, #1
+ 311 00de 4042     		rsbs	r0, r0, #0
+ 312 00e0 9860     		str	r0, [r3, #8]
+ 313 00e2 0022     		movs	r2, #0
+ 314 00e4 1A70     		strb	r2, [r3]
+ 315 00e6 FFF7FEFF 		bl	HAL_FLASH_EndOfOperationCallback
+ 316 00ea CCE7     		b	.L25
+ 317              	.L38:
+ 318 00ec 174A     		ldr	r2, .L42
+ 319 00ee 1369     		ldr	r3, [r2, #16]
+ 320 00f0 0421     		movs	r1, #4
+ 321 00f2 8B43     		bics	r3, r1
+ 322 00f4 1361     		str	r3, [r2, #16]
+ 323 00f6 0020     		movs	r0, #0
+ 324 00f8 FFF7FEFF 		bl	HAL_FLASH_EndOfOperationCallback
+ 325 00fc 144B     		ldr	r3, .L42+4
+ 326 00fe 0022     		movs	r2, #0
+ 327 0100 1A70     		strb	r2, [r3]
+ 328 0102 C0E7     		b	.L25
+ 329              	.L39:
+ 330 0104 124B     		ldr	r3, .L42+4
+ 331 0106 9A68     		ldr	r2, [r3, #8]
+ 332 0108 0232     		adds	r2, r2, #2
+ 333 010a 9A60     		str	r2, [r3, #8]
+ 334 010c 9868     		ldr	r0, [r3, #8]
+ 335 010e 1D69     		ldr	r5, [r3, #16]
+ 336 0110 5E69     		ldr	r6, [r3, #20]
+ 337 0112 3404     		lsls	r4, r6, #16
+ 338 0114 290C     		lsrs	r1, r5, #16
+ 339 0116 6118     		adds	r1, r4, r1
+ 340 0118 320C     		lsrs	r2, r6, #16
+ 341 011a 1961     		str	r1, [r3, #16]
+ 342 011c 5A61     		str	r2, [r3, #20]
+ 343 011e 0B49     		ldr	r1, .L42
+ 344 0120 0A69     		ldr	r2, [r1, #16]
+ 345 0122 0124     		movs	r4, #1
+ 346 0124 A243     		bics	r2, r4
+ 347 0126 0A61     		str	r2, [r1, #16]
+ 348 0128 1A69     		ldr	r2, [r3, #16]
+ 349 012a 5B69     		ldr	r3, [r3, #20]
+ 350 012c 91B2     		uxth	r1, r2
+ 351 012e FFF7FEFF 		bl	FLASH_Program_HalfWord
+ 352 0132 A8E7     		b	.L25
+ 353              	.L40:
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 7
+
+
+ 354 0134 064B     		ldr	r3, .L42+4
+ 355 0136 9868     		ldr	r0, [r3, #8]
+ 356 0138 FFF7FEFF 		bl	HAL_FLASH_EndOfOperationCallback
+ 357 013c 9DE7     		b	.L31
+ 358              	.L41:
+ 359 013e 044B     		ldr	r3, .L42+4
+ 360 0140 9868     		ldr	r0, [r3, #8]
+ 361 0142 0238     		subs	r0, r0, #2
+ 362 0144 FFF7FEFF 		bl	HAL_FLASH_EndOfOperationCallback
+ 363 0148 97E7     		b	.L31
+ 364              	.L43:
+ 365 014a C046     		.align	2
+ 366              	.L42:
+ 367 014c 00200240 		.word	1073881088
+ 368 0150 00000000 		.word	pFlash
+ 369 0154 FFEBFFFF 		.word	-5121
+ 371              		.section	.text.HAL_FLASH_Unlock,"ax",%progbits
+ 372              		.align	1
+ 373              		.global	HAL_FLASH_Unlock
+ 374              		.syntax unified
+ 375              		.code	16
+ 376              		.thumb_func
+ 378              	HAL_FLASH_Unlock:
+ 379              		@ args = 0, pretend = 0, frame = 0
+ 380              		@ frame_needed = 0, uses_anonymous_args = 0
+ 381              		@ link register save eliminated.
+ 382 0000 084B     		ldr	r3, .L48
+ 383 0002 1B69     		ldr	r3, [r3, #16]
+ 384 0004 1B06     		lsls	r3, r3, #24
+ 385 0006 09D5     		bpl	.L46
+ 386 0008 064B     		ldr	r3, .L48
+ 387 000a 074A     		ldr	r2, .L48+4
+ 388 000c 5A60     		str	r2, [r3, #4]
+ 389 000e 074A     		ldr	r2, .L48+8
+ 390 0010 5A60     		str	r2, [r3, #4]
+ 391 0012 1B69     		ldr	r3, [r3, #16]
+ 392 0014 1B06     		lsls	r3, r3, #24
+ 393 0016 03D4     		bmi	.L47
+ 394 0018 0020     		movs	r0, #0
+ 395 001a 00E0     		b	.L45
+ 396              	.L46:
+ 397 001c 0020     		movs	r0, #0
+ 398              	.L45:
+ 399              		@ sp needed
+ 400 001e 7047     		bx	lr
+ 401              	.L47:
+ 402 0020 0120     		movs	r0, #1
+ 403 0022 FCE7     		b	.L45
+ 404              	.L49:
+ 405              		.align	2
+ 406              	.L48:
+ 407 0024 00200240 		.word	1073881088
+ 408 0028 23016745 		.word	1164378403
+ 409 002c AB89EFCD 		.word	-839939669
+ 411              		.section	.text.HAL_FLASH_Lock,"ax",%progbits
+ 412              		.align	1
+ 413              		.global	HAL_FLASH_Lock
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 8
+
+
+ 414              		.syntax unified
+ 415              		.code	16
+ 416              		.thumb_func
+ 418              	HAL_FLASH_Lock:
+ 419              		@ args = 0, pretend = 0, frame = 0
+ 420              		@ frame_needed = 0, uses_anonymous_args = 0
+ 421              		@ link register save eliminated.
+ 422 0000 034A     		ldr	r2, .L51
+ 423 0002 1369     		ldr	r3, [r2, #16]
+ 424 0004 8021     		movs	r1, #128
+ 425 0006 0B43     		orrs	r3, r1
+ 426 0008 1361     		str	r3, [r2, #16]
+ 427 000a 0020     		movs	r0, #0
+ 428              		@ sp needed
+ 429 000c 7047     		bx	lr
+ 430              	.L52:
+ 431 000e C046     		.align	2
+ 432              	.L51:
+ 433 0010 00200240 		.word	1073881088
+ 435              		.section	.text.HAL_FLASH_OB_Unlock,"ax",%progbits
+ 436              		.align	1
+ 437              		.global	HAL_FLASH_OB_Unlock
+ 438              		.syntax unified
+ 439              		.code	16
+ 440              		.thumb_func
+ 442              	HAL_FLASH_OB_Unlock:
+ 443              		@ args = 0, pretend = 0, frame = 0
+ 444              		@ frame_needed = 0, uses_anonymous_args = 0
+ 445              		@ link register save eliminated.
+ 446 0000 064B     		ldr	r3, .L56
+ 447 0002 1B69     		ldr	r3, [r3, #16]
+ 448 0004 9B05     		lsls	r3, r3, #22
+ 449 0006 06D4     		bmi	.L55
+ 450 0008 044B     		ldr	r3, .L56
+ 451 000a 054A     		ldr	r2, .L56+4
+ 452 000c 9A60     		str	r2, [r3, #8]
+ 453 000e 054A     		ldr	r2, .L56+8
+ 454 0010 9A60     		str	r2, [r3, #8]
+ 455 0012 0020     		movs	r0, #0
+ 456              	.L54:
+ 457              		@ sp needed
+ 458 0014 7047     		bx	lr
+ 459              	.L55:
+ 460 0016 0120     		movs	r0, #1
+ 461 0018 FCE7     		b	.L54
+ 462              	.L57:
+ 463 001a C046     		.align	2
+ 464              	.L56:
+ 465 001c 00200240 		.word	1073881088
+ 466 0020 23016745 		.word	1164378403
+ 467 0024 AB89EFCD 		.word	-839939669
+ 469              		.section	.text.HAL_FLASH_OB_Lock,"ax",%progbits
+ 470              		.align	1
+ 471              		.global	HAL_FLASH_OB_Lock
+ 472              		.syntax unified
+ 473              		.code	16
+ 474              		.thumb_func
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 9
+
+
+ 476              	HAL_FLASH_OB_Lock:
+ 477              		@ args = 0, pretend = 0, frame = 0
+ 478              		@ frame_needed = 0, uses_anonymous_args = 0
+ 479              		@ link register save eliminated.
+ 480 0000 034A     		ldr	r2, .L59
+ 481 0002 1369     		ldr	r3, [r2, #16]
+ 482 0004 0349     		ldr	r1, .L59+4
+ 483 0006 0B40     		ands	r3, r1
+ 484 0008 1361     		str	r3, [r2, #16]
+ 485 000a 0020     		movs	r0, #0
+ 486              		@ sp needed
+ 487 000c 7047     		bx	lr
+ 488              	.L60:
+ 489 000e C046     		.align	2
+ 490              	.L59:
+ 491 0010 00200240 		.word	1073881088
+ 492 0014 FFFDFFFF 		.word	-513
+ 494              		.section	.text.HAL_FLASH_GetError,"ax",%progbits
+ 495              		.align	1
+ 496              		.global	HAL_FLASH_GetError
+ 497              		.syntax unified
+ 498              		.code	16
+ 499              		.thumb_func
+ 501              	HAL_FLASH_GetError:
+ 502              		@ args = 0, pretend = 0, frame = 0
+ 503              		@ frame_needed = 0, uses_anonymous_args = 0
+ 504              		@ link register save eliminated.
+ 505 0000 014B     		ldr	r3, .L62
+ 506 0002 D869     		ldr	r0, [r3, #28]
+ 507              		@ sp needed
+ 508 0004 7047     		bx	lr
+ 509              	.L63:
+ 510 0006 C046     		.align	2
+ 511              	.L62:
+ 512 0008 00000000 		.word	pFlash
+ 514              		.section	.text.FLASH_WaitForLastOperation,"ax",%progbits
+ 515              		.align	1
+ 516              		.global	FLASH_WaitForLastOperation
+ 517              		.syntax unified
+ 518              		.code	16
+ 519              		.thumb_func
+ 521              	FLASH_WaitForLastOperation:
+ 522              		@ args = 0, pretend = 0, frame = 0
+ 523              		@ frame_needed = 0, uses_anonymous_args = 0
+ 524 0000 70B5     		push	{r4, r5, r6, lr}
+ 525 0002 0400     		movs	r4, r0
+ 526 0004 FFF7FEFF 		bl	HAL_GetTick
+ 527 0008 0500     		movs	r5, r0
+ 528              	.L66:
+ 529 000a 124B     		ldr	r3, .L77
+ 530 000c DB68     		ldr	r3, [r3, #12]
+ 531 000e DB07     		lsls	r3, r3, #31
+ 532 0010 0AD5     		bpl	.L76
+ 533 0012 631C     		adds	r3, r4, #1
+ 534 0014 F9D0     		beq	.L66
+ 535 0016 002C     		cmp	r4, #0
+ 536 0018 04D0     		beq	.L67
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 10
+
+
+ 537 001a FFF7FEFF 		bl	HAL_GetTick
+ 538 001e 401B     		subs	r0, r0, r5
+ 539 0020 A042     		cmp	r0, r4
+ 540 0022 F2D9     		bls	.L66
+ 541              	.L67:
+ 542 0024 0320     		movs	r0, #3
+ 543 0026 0FE0     		b	.L68
+ 544              	.L76:
+ 545 0028 0A4B     		ldr	r3, .L77
+ 546 002a DB68     		ldr	r3, [r3, #12]
+ 547 002c 9B06     		lsls	r3, r3, #26
+ 548 002e 02D5     		bpl	.L70
+ 549 0030 084B     		ldr	r3, .L77
+ 550 0032 2022     		movs	r2, #32
+ 551 0034 DA60     		str	r2, [r3, #12]
+ 552              	.L70:
+ 553 0036 074B     		ldr	r3, .L77
+ 554 0038 DB68     		ldr	r3, [r3, #12]
+ 555 003a DB06     		lsls	r3, r3, #27
+ 556 003c 05D4     		bmi	.L71
+ 557 003e 054B     		ldr	r3, .L77
+ 558 0040 DB68     		ldr	r3, [r3, #12]
+ 559 0042 5B07     		lsls	r3, r3, #29
+ 560 0044 01D4     		bmi	.L71
+ 561 0046 0020     		movs	r0, #0
+ 562              	.L68:
+ 563              		@ sp needed
+ 564 0048 70BD     		pop	{r4, r5, r6, pc}
+ 565              	.L71:
+ 566 004a FFF7FEFF 		bl	FLASH_SetErrorCode
+ 567 004e 0120     		movs	r0, #1
+ 568 0050 FAE7     		b	.L68
+ 569              	.L78:
+ 570 0052 C046     		.align	2
+ 571              	.L77:
+ 572 0054 00200240 		.word	1073881088
+ 574              		.section	.text.HAL_FLASH_Program,"ax",%progbits
+ 575              		.align	1
+ 576              		.global	HAL_FLASH_Program
+ 577              		.syntax unified
+ 578              		.code	16
+ 579              		.thumb_func
+ 581              	HAL_FLASH_Program:
+ 582              		@ args = 0, pretend = 0, frame = 0
+ 583              		@ frame_needed = 0, uses_anonymous_args = 0
+ 584 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 585 0002 C646     		mov	lr, r8
+ 586 0004 00B5     		push	{lr}
+ 587 0006 0400     		movs	r4, r0
+ 588 0008 0D00     		movs	r5, r1
+ 589 000a 9046     		mov	r8, r2
+ 590 000c 1E00     		movs	r6, r3
+ 591 000e 204B     		ldr	r3, .L91
+ 592 0010 1B7E     		ldrb	r3, [r3, #24]
+ 593 0012 012B     		cmp	r3, #1
+ 594 0014 3AD0     		beq	.L87
+ 595 0016 1E4B     		ldr	r3, .L91
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 11
+
+
+ 596 0018 0122     		movs	r2, #1
+ 597 001a 1A76     		strb	r2, [r3, #24]
+ 598 001c 1D48     		ldr	r0, .L91+4
+ 599 001e FFF7FEFF 		bl	FLASH_WaitForLastOperation
+ 600 0022 031E     		subs	r3, r0, #0
+ 601 0024 2CD1     		bne	.L81
+ 602 0026 012C     		cmp	r4, #1
+ 603 0028 06D0     		beq	.L88
+ 604 002a 022C     		cmp	r4, #2
+ 605 002c 02D0     		beq	.L90
+ 606 002e 0427     		movs	r7, #4
+ 607              	.L82:
+ 608 0030 1C00     		movs	r4, r3
+ 609 0032 1AE0     		b	.L83
+ 610              	.L90:
+ 611 0034 0227     		movs	r7, #2
+ 612 0036 FBE7     		b	.L82
+ 613              	.L88:
+ 614 0038 0127     		movs	r7, #1
+ 615 003a F9E7     		b	.L82
+ 616              	.L84:
+ 617 003c 2022     		movs	r2, #32
+ 618 003e D21A     		subs	r2, r2, r3
+ 619 0040 3100     		movs	r1, r6
+ 620 0042 9140     		lsls	r1, r1, r2
+ 621 0044 0A00     		movs	r2, r1
+ 622 0046 4146     		mov	r1, r8
+ 623 0048 D940     		lsrs	r1, r1, r3
+ 624 004a 5118     		adds	r1, r2, r1
+ 625              	.L85:
+ 626 004c 89B2     		uxth	r1, r1
+ 627 004e FFF7FEFF 		bl	FLASH_Program_HalfWord
+ 628 0052 1048     		ldr	r0, .L91+4
+ 629 0054 FFF7FEFF 		bl	FLASH_WaitForLastOperation
+ 630 0058 0F4A     		ldr	r2, .L91+8
+ 631 005a 1369     		ldr	r3, [r2, #16]
+ 632 005c 0121     		movs	r1, #1
+ 633 005e 8B43     		bics	r3, r1
+ 634 0060 1361     		str	r3, [r2, #16]
+ 635 0062 0028     		cmp	r0, #0
+ 636 0064 0CD1     		bne	.L81
+ 637 0066 0134     		adds	r4, r4, #1
+ 638 0068 E4B2     		uxtb	r4, r4
+ 639              	.L83:
+ 640 006a BC42     		cmp	r4, r7
+ 641 006c 08D2     		bcs	.L81
+ 642 006e 6000     		lsls	r0, r4, #1
+ 643 0070 4019     		adds	r0, r0, r5
+ 644 0072 2301     		lsls	r3, r4, #4
+ 645 0074 1A00     		movs	r2, r3
+ 646 0076 203A     		subs	r2, r2, #32
+ 647 0078 E0D4     		bmi	.L84
+ 648 007a 3100     		movs	r1, r6
+ 649 007c D140     		lsrs	r1, r1, r2
+ 650 007e E5E7     		b	.L85
+ 651              	.L81:
+ 652 0080 034B     		ldr	r3, .L91
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 12
+
+
+ 653 0082 0022     		movs	r2, #0
+ 654 0084 1A76     		strb	r2, [r3, #24]
+ 655              	.L80:
+ 656              		@ sp needed
+ 657 0086 80BC     		pop	{r7}
+ 658 0088 B846     		mov	r8, r7
+ 659 008a F0BD     		pop	{r4, r5, r6, r7, pc}
+ 660              	.L87:
+ 661 008c 0220     		movs	r0, #2
+ 662 008e FAE7     		b	.L80
+ 663              	.L92:
+ 664              		.align	2
+ 665              	.L91:
+ 666 0090 00000000 		.word	pFlash
+ 667 0094 50C30000 		.word	50000
+ 668 0098 00200240 		.word	1073881088
+ 670              		.section	.text.HAL_FLASH_OB_Launch,"ax",%progbits
+ 671              		.align	1
+ 672              		.global	HAL_FLASH_OB_Launch
+ 673              		.syntax unified
+ 674              		.code	16
+ 675              		.thumb_func
+ 677              	HAL_FLASH_OB_Launch:
+ 678              		@ args = 0, pretend = 0, frame = 0
+ 679              		@ frame_needed = 0, uses_anonymous_args = 0
+ 680 0000 10B5     		push	{r4, lr}
+ 681 0002 054A     		ldr	r2, .L94
+ 682 0004 1169     		ldr	r1, [r2, #16]
+ 683 0006 8023     		movs	r3, #128
+ 684 0008 9B01     		lsls	r3, r3, #6
+ 685 000a 0B43     		orrs	r3, r1
+ 686 000c 1361     		str	r3, [r2, #16]
+ 687 000e 0348     		ldr	r0, .L94+4
+ 688 0010 FFF7FEFF 		bl	FLASH_WaitForLastOperation
+ 689              		@ sp needed
+ 690 0014 10BD     		pop	{r4, pc}
+ 691              	.L95:
+ 692 0016 C046     		.align	2
+ 693              	.L94:
+ 694 0018 00200240 		.word	1073881088
+ 695 001c 50C30000 		.word	50000
+ 697              		.global	pFlash
+ 698              		.section	.bss.pFlash,"aw",%nobits
+ 699              		.align	3
+ 702              	pFlash:
+ 703 0000 00000000 		.space	32
+ 703      00000000 
+ 703      00000000 
+ 703      00000000 
+ 703      00000000 
+ 704              		.ident	"GCC: (xPack GNU Arm Embedded GCC x86_64) 15.2.1 20251203"
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s 			page 13
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 stm32f0xx_hal_flash.c
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:16     .text.FLASH_Program_HalfWord:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:21     .text.FLASH_Program_HalfWord:00000000 FLASH_Program_HalfWord
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:39     .text.FLASH_Program_HalfWord:00000018 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:702    .bss.pFlash:00000000 pFlash
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:43     .text.FLASH_SetErrorCode:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:48     .text.FLASH_SetErrorCode:00000000 FLASH_SetErrorCode
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:85     .text.FLASH_SetErrorCode:00000038 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:89     .text.HAL_FLASH_Program_IT:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:95     .text.HAL_FLASH_Program_IT:00000000 HAL_FLASH_Program_IT
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:156    .text.HAL_FLASH_Program_IT:00000064 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:160    .text.HAL_FLASH_EndOfOperationCallback:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:166    .text.HAL_FLASH_EndOfOperationCallback:00000000 HAL_FLASH_EndOfOperationCallback
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:174    .text.HAL_FLASH_OperationErrorCallback:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:180    .text.HAL_FLASH_OperationErrorCallback:00000000 HAL_FLASH_OperationErrorCallback
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:188    .text.HAL_FLASH_IRQHandler:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:194    .text.HAL_FLASH_IRQHandler:00000000 HAL_FLASH_IRQHandler
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:367    .text.HAL_FLASH_IRQHandler:0000014c $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:372    .text.HAL_FLASH_Unlock:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:378    .text.HAL_FLASH_Unlock:00000000 HAL_FLASH_Unlock
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:407    .text.HAL_FLASH_Unlock:00000024 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:412    .text.HAL_FLASH_Lock:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:418    .text.HAL_FLASH_Lock:00000000 HAL_FLASH_Lock
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:433    .text.HAL_FLASH_Lock:00000010 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:436    .text.HAL_FLASH_OB_Unlock:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:442    .text.HAL_FLASH_OB_Unlock:00000000 HAL_FLASH_OB_Unlock
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:465    .text.HAL_FLASH_OB_Unlock:0000001c $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:470    .text.HAL_FLASH_OB_Lock:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:476    .text.HAL_FLASH_OB_Lock:00000000 HAL_FLASH_OB_Lock
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:491    .text.HAL_FLASH_OB_Lock:00000010 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:495    .text.HAL_FLASH_GetError:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:501    .text.HAL_FLASH_GetError:00000000 HAL_FLASH_GetError
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:512    .text.HAL_FLASH_GetError:00000008 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:515    .text.FLASH_WaitForLastOperation:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:521    .text.FLASH_WaitForLastOperation:00000000 FLASH_WaitForLastOperation
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:572    .text.FLASH_WaitForLastOperation:00000054 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:575    .text.HAL_FLASH_Program:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:581    .text.HAL_FLASH_Program:00000000 HAL_FLASH_Program
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:666    .text.HAL_FLASH_Program:00000090 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:671    .text.HAL_FLASH_OB_Launch:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:677    .text.HAL_FLASH_OB_Launch:00000000 HAL_FLASH_OB_Launch
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:694    .text.HAL_FLASH_OB_Launch:00000018 $d
+C:\Users\fastr\AppData\Local\Temp\cc6G50Hd.s:699    .bss.pFlash:00000000 $d
+
+UNDEFINED SYMBOLS
+FLASH_PageErase
+HAL_GetTick

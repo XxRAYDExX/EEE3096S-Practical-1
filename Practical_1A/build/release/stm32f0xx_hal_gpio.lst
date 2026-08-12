@@ -1,0 +1,555 @@
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"stm32f0xx_hal_gpio.c"
+  14              		.text
+  15              		.section	.text.HAL_GPIO_Init,"ax",%progbits
+  16              		.align	1
+  17              		.global	HAL_GPIO_Init
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  22              	HAL_GPIO_Init:
+  23              		@ args = 0, pretend = 0, frame = 8
+  24              		@ frame_needed = 0, uses_anonymous_args = 0
+  25 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+  26 0002 83B0     		sub	sp, sp, #12
+  27 0004 0400     		movs	r4, r0
+  28 0006 0023     		movs	r3, #0
+  29 0008 56E0     		b	.L2
+  30              	.L22:
+  31 000a A668     		ldr	r6, [r4, #8]
+  32 000c 5F00     		lsls	r7, r3, #1
+  33 000e 0320     		movs	r0, #3
+  34 0010 B840     		lsls	r0, r0, r7
+  35 0012 8643     		bics	r6, r0
+  36 0014 C868     		ldr	r0, [r1, #12]
+  37 0016 B840     		lsls	r0, r0, r7
+  38 0018 3043     		orrs	r0, r6
+  39 001a A060     		str	r0, [r4, #8]
+  40 001c 6068     		ldr	r0, [r4, #4]
+  41 001e 9043     		bics	r0, r2
+  42 0020 4E68     		ldr	r6, [r1, #4]
+  43 0022 3609     		lsrs	r6, r6, #4
+  44 0024 0122     		movs	r2, #1
+  45 0026 3240     		ands	r2, r6
+  46 0028 9A40     		lsls	r2, r2, r3
+  47 002a 0243     		orrs	r2, r0
+  48 002c 6260     		str	r2, [r4, #4]
+  49 002e 53E0     		b	.L4
+  50              	.L23:
+  51 0030 DE08     		lsrs	r6, r3, #3
+  52 0032 0836     		adds	r6, r6, #8
+  53 0034 B600     		lsls	r6, r6, #2
+  54 0036 3759     		ldr	r7, [r6, r4]
+  55 0038 0532     		adds	r2, r2, #5
+  56 003a 1A40     		ands	r2, r3
+  57 003c 9200     		lsls	r2, r2, #2
+  58 003e 0F20     		movs	r0, #15
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 2
+
+
+  59 0040 9040     		lsls	r0, r0, r2
+  60 0042 8743     		bics	r7, r0
+  61 0044 0869     		ldr	r0, [r1, #16]
+  62 0046 9040     		lsls	r0, r0, r2
+  63 0048 0200     		movs	r2, r0
+  64 004a 3A43     		orrs	r2, r7
+  65 004c 3251     		str	r2, [r6, r4]
+  66 004e 56E0     		b	.L6
+  67              	.L24:
+  68 0050 0326     		movs	r6, #3
+  69 0052 00E0     		b	.L7
+  70              	.L13:
+  71 0054 0026     		movs	r6, #0
+  72              	.L7:
+  73 0056 8640     		lsls	r6, r6, r0
+  74 0058 3000     		movs	r0, r6
+  75 005a 3843     		orrs	r0, r7
+  76 005c 0232     		adds	r2, r2, #2
+  77 005e 9200     		lsls	r2, r2, #2
+  78 0060 444E     		ldr	r6, .L25
+  79 0062 9051     		str	r0, [r2, r6]
+  80 0064 444A     		ldr	r2, .L25+4
+  81 0066 9768     		ldr	r7, [r2, #8]
+  82 0068 EA43     		mvns	r2, r5
+  83 006a 3E00     		movs	r6, r7
+  84 006c AE43     		bics	r6, r5
+  85 006e 4868     		ldr	r0, [r1, #4]
+  86 0070 C002     		lsls	r0, r0, #11
+  87 0072 01D5     		bpl	.L8
+  88 0074 3E00     		movs	r6, r7
+  89 0076 2E43     		orrs	r6, r5
+  90              	.L8:
+  91 0078 3F48     		ldr	r0, .L25+4
+  92 007a 8660     		str	r6, [r0, #8]
+  93 007c C768     		ldr	r7, [r0, #12]
+  94 007e 3E00     		movs	r6, r7
+  95 0080 1640     		ands	r6, r2
+  96 0082 4868     		ldr	r0, [r1, #4]
+  97 0084 8002     		lsls	r0, r0, #10
+  98 0086 01D5     		bpl	.L9
+  99 0088 3E00     		movs	r6, r7
+ 100 008a 2E43     		orrs	r6, r5
+ 101              	.L9:
+ 102 008c 3A48     		ldr	r0, .L25+4
+ 103 008e C660     		str	r6, [r0, #12]
+ 104 0090 4768     		ldr	r7, [r0, #4]
+ 105 0092 3E00     		movs	r6, r7
+ 106 0094 1640     		ands	r6, r2
+ 107 0096 4868     		ldr	r0, [r1, #4]
+ 108 0098 8003     		lsls	r0, r0, #14
+ 109 009a 01D5     		bpl	.L10
+ 110 009c 3E00     		movs	r6, r7
+ 111 009e 2E43     		orrs	r6, r5
+ 112              	.L10:
+ 113 00a0 3548     		ldr	r0, .L25+4
+ 114 00a2 4660     		str	r6, [r0, #4]
+ 115 00a4 0668     		ldr	r6, [r0]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 3
+
+
+ 116 00a6 3240     		ands	r2, r6
+ 117 00a8 4868     		ldr	r0, [r1, #4]
+ 118 00aa C003     		lsls	r0, r0, #15
+ 119 00ac 01D5     		bpl	.L11
+ 120 00ae 2A00     		movs	r2, r5
+ 121 00b0 3243     		orrs	r2, r6
+ 122              	.L11:
+ 123 00b2 3148     		ldr	r0, .L25+4
+ 124 00b4 0260     		str	r2, [r0]
+ 125              	.L3:
+ 126 00b6 0133     		adds	r3, r3, #1
+ 127              	.L2:
+ 128 00b8 0868     		ldr	r0, [r1]
+ 129 00ba 0200     		movs	r2, r0
+ 130 00bc DA40     		lsrs	r2, r2, r3
+ 131 00be 56D0     		beq	.L21
+ 132 00c0 0122     		movs	r2, #1
+ 133 00c2 9A40     		lsls	r2, r2, r3
+ 134 00c4 0500     		movs	r5, r0
+ 135 00c6 1540     		ands	r5, r2
+ 136 00c8 1042     		tst	r0, r2
+ 137 00ca F4D0     		beq	.L3
+ 138 00cc 4E68     		ldr	r6, [r1, #4]
+ 139 00ce 0320     		movs	r0, #3
+ 140 00d0 3040     		ands	r0, r6
+ 141 00d2 0138     		subs	r0, r0, #1
+ 142 00d4 0128     		cmp	r0, #1
+ 143 00d6 98D9     		bls	.L22
+ 144              	.L4:
+ 145 00d8 4868     		ldr	r0, [r1, #4]
+ 146 00da 0322     		movs	r2, #3
+ 147 00dc 0240     		ands	r2, r0
+ 148 00de 032A     		cmp	r2, #3
+ 149 00e0 08D0     		beq	.L5
+ 150 00e2 E068     		ldr	r0, [r4, #12]
+ 151 00e4 5E00     		lsls	r6, r3, #1
+ 152 00e6 0322     		movs	r2, #3
+ 153 00e8 B240     		lsls	r2, r2, r6
+ 154 00ea 9043     		bics	r0, r2
+ 155 00ec 8A68     		ldr	r2, [r1, #8]
+ 156 00ee B240     		lsls	r2, r2, r6
+ 157 00f0 0243     		orrs	r2, r0
+ 158 00f2 E260     		str	r2, [r4, #12]
+ 159              	.L5:
+ 160 00f4 4868     		ldr	r0, [r1, #4]
+ 161 00f6 0322     		movs	r2, #3
+ 162 00f8 0240     		ands	r2, r0
+ 163 00fa 022A     		cmp	r2, #2
+ 164 00fc 98D0     		beq	.L23
+ 165              	.L6:
+ 166 00fe 2068     		ldr	r0, [r4]
+ 167 0100 5E00     		lsls	r6, r3, #1
+ 168 0102 0322     		movs	r2, #3
+ 169 0104 1700     		movs	r7, r2
+ 170 0106 B740     		lsls	r7, r7, r6
+ 171 0108 B843     		bics	r0, r7
+ 172 010a 4F68     		ldr	r7, [r1, #4]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 4
+
+
+ 173 010c 3A40     		ands	r2, r7
+ 174 010e B240     		lsls	r2, r2, r6
+ 175 0110 0243     		orrs	r2, r0
+ 176 0112 2260     		str	r2, [r4]
+ 177 0114 4868     		ldr	r0, [r1, #4]
+ 178 0116 C022     		movs	r2, #192
+ 179 0118 9202     		lsls	r2, r2, #10
+ 180 011a 1042     		tst	r0, r2
+ 181 011c CBD0     		beq	.L3
+ 182 011e 1748     		ldr	r0, .L25+8
+ 183 0120 8669     		ldr	r6, [r0, #24]
+ 184 0122 0122     		movs	r2, #1
+ 185 0124 1643     		orrs	r6, r2
+ 186 0126 8661     		str	r6, [r0, #24]
+ 187 0128 8069     		ldr	r0, [r0, #24]
+ 188 012a 0240     		ands	r2, r0
+ 189 012c 0192     		str	r2, [sp, #4]
+ 190 012e 019A     		ldr	r2, [sp, #4]
+ 191 0130 9A08     		lsrs	r2, r3, #2
+ 192 0132 901C     		adds	r0, r2, #2
+ 193 0134 8000     		lsls	r0, r0, #2
+ 194 0136 0F4E     		ldr	r6, .L25
+ 195 0138 8759     		ldr	r7, [r0, r6]
+ 196 013a 0320     		movs	r0, #3
+ 197 013c 1840     		ands	r0, r3
+ 198 013e 8000     		lsls	r0, r0, #2
+ 199 0140 0F26     		movs	r6, #15
+ 200 0142 8640     		lsls	r6, r6, r0
+ 201 0144 B743     		bics	r7, r6
+ 202 0146 9026     		movs	r6, #144
+ 203 0148 F605     		lsls	r6, r6, #23
+ 204 014a B442     		cmp	r4, r6
+ 205 014c 82D0     		beq	.L13
+ 206 014e 0C4E     		ldr	r6, .L25+12
+ 207 0150 B442     		cmp	r4, r6
+ 208 0152 08D0     		beq	.L14
+ 209 0154 0B4E     		ldr	r6, .L25+16
+ 210 0156 B442     		cmp	r4, r6
+ 211 0158 07D0     		beq	.L15
+ 212 015a 0B4E     		ldr	r6, .L25+20
+ 213 015c B442     		cmp	r4, r6
+ 214 015e 00D1     		bne	.LCB225
+ 215 0160 76E7     		b	.L24	@long jump
+ 216              	.LCB225:
+ 217 0162 0526     		movs	r6, #5
+ 218 0164 77E7     		b	.L7
+ 219              	.L14:
+ 220 0166 0126     		movs	r6, #1
+ 221 0168 75E7     		b	.L7
+ 222              	.L15:
+ 223 016a 0226     		movs	r6, #2
+ 224 016c 73E7     		b	.L7
+ 225              	.L21:
+ 226 016e 03B0     		add	sp, sp, #12
+ 227              		@ sp needed
+ 228 0170 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 229              	.L26:
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 5
+
+
+ 230 0172 C046     		.align	2
+ 231              	.L25:
+ 232 0174 00000140 		.word	1073807360
+ 233 0178 00040140 		.word	1073808384
+ 234 017c 00100240 		.word	1073876992
+ 235 0180 00040048 		.word	1207960576
+ 236 0184 00080048 		.word	1207961600
+ 237 0188 000C0048 		.word	1207962624
+ 239              		.section	.text.HAL_GPIO_DeInit,"ax",%progbits
+ 240              		.align	1
+ 241              		.global	HAL_GPIO_DeInit
+ 242              		.syntax unified
+ 243              		.code	16
+ 244              		.thumb_func
+ 246              	HAL_GPIO_DeInit:
+ 247              		@ args = 0, pretend = 0, frame = 0
+ 248              		@ frame_needed = 0, uses_anonymous_args = 0
+ 249 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 250 0002 C646     		mov	lr, r8
+ 251 0004 00B5     		push	{lr}
+ 252 0006 8846     		mov	r8, r1
+ 253 0008 0023     		movs	r3, #0
+ 254 000a 20E0     		b	.L28
+ 255              	.L39:
+ 256 000c 0324     		movs	r4, #3
+ 257 000e 00E0     		b	.L30
+ 258              	.L33:
+ 259 0010 0024     		movs	r4, #0
+ 260              	.L30:
+ 261 0012 8C40     		lsls	r4, r4, r1
+ 262 0014 AC42     		cmp	r4, r5
+ 263 0016 43D0     		beq	.L37
+ 264              	.L31:
+ 265 0018 0168     		ldr	r1, [r0]
+ 266 001a 5E00     		lsls	r6, r3, #1
+ 267 001c 0325     		movs	r5, #3
+ 268 001e B540     		lsls	r5, r5, r6
+ 269 0020 A943     		bics	r1, r5
+ 270 0022 0160     		str	r1, [r0]
+ 271 0024 D908     		lsrs	r1, r3, #3
+ 272 0026 0831     		adds	r1, r1, #8
+ 273 0028 8900     		lsls	r1, r1, #2
+ 274 002a 0F58     		ldr	r7, [r1, r0]
+ 275 002c 0726     		movs	r6, #7
+ 276 002e 1E40     		ands	r6, r3
+ 277 0030 B600     		lsls	r6, r6, #2
+ 278 0032 0F24     		movs	r4, #15
+ 279 0034 B440     		lsls	r4, r4, r6
+ 280 0036 A743     		bics	r7, r4
+ 281 0038 0F50     		str	r7, [r1, r0]
+ 282 003a C168     		ldr	r1, [r0, #12]
+ 283 003c A943     		bics	r1, r5
+ 284 003e C160     		str	r1, [r0, #12]
+ 285 0040 4168     		ldr	r1, [r0, #4]
+ 286 0042 9143     		bics	r1, r2
+ 287 0044 4160     		str	r1, [r0, #4]
+ 288 0046 8268     		ldr	r2, [r0, #8]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 6
+
+
+ 289 0048 AA43     		bics	r2, r5
+ 290 004a 8260     		str	r2, [r0, #8]
+ 291              	.L29:
+ 292 004c 0133     		adds	r3, r3, #1
+ 293              	.L28:
+ 294 004e 4246     		mov	r2, r8
+ 295 0050 DA40     		lsrs	r2, r2, r3
+ 296 0052 3CD0     		beq	.L38
+ 297 0054 0122     		movs	r2, #1
+ 298 0056 9A40     		lsls	r2, r2, r3
+ 299 0058 4146     		mov	r1, r8
+ 300 005a 1140     		ands	r1, r2
+ 301 005c 8C46     		mov	ip, r1
+ 302 005e 4146     		mov	r1, r8
+ 303 0060 1142     		tst	r1, r2
+ 304 0062 F3D0     		beq	.L29
+ 305 0064 9F08     		lsrs	r7, r3, #2
+ 306 0066 B91C     		adds	r1, r7, #2
+ 307 0068 8900     		lsls	r1, r1, #2
+ 308 006a 1A4D     		ldr	r5, .L40
+ 309 006c 4D59     		ldr	r5, [r1, r5]
+ 310 006e 0326     		movs	r6, #3
+ 311 0070 1E40     		ands	r6, r3
+ 312 0072 B100     		lsls	r1, r6, #2
+ 313 0074 0F26     		movs	r6, #15
+ 314 0076 8E40     		lsls	r6, r6, r1
+ 315 0078 3540     		ands	r5, r6
+ 316 007a 9024     		movs	r4, #144
+ 317 007c E405     		lsls	r4, r4, #23
+ 318 007e A042     		cmp	r0, r4
+ 319 0080 C6D0     		beq	.L33
+ 320 0082 154C     		ldr	r4, .L40+4
+ 321 0084 A042     		cmp	r0, r4
+ 322 0086 07D0     		beq	.L34
+ 323 0088 144C     		ldr	r4, .L40+8
+ 324 008a A042     		cmp	r0, r4
+ 325 008c 06D0     		beq	.L35
+ 326 008e 144C     		ldr	r4, .L40+12
+ 327 0090 A042     		cmp	r0, r4
+ 328 0092 BBD0     		beq	.L39
+ 329 0094 0524     		movs	r4, #5
+ 330 0096 BCE7     		b	.L30
+ 331              	.L34:
+ 332 0098 0124     		movs	r4, #1
+ 333 009a BAE7     		b	.L30
+ 334              	.L35:
+ 335 009c 0224     		movs	r4, #2
+ 336 009e B8E7     		b	.L30
+ 337              	.L37:
+ 338 00a0 1049     		ldr	r1, .L40+16
+ 339 00a2 0D68     		ldr	r5, [r1]
+ 340 00a4 6446     		mov	r4, ip
+ 341 00a6 A543     		bics	r5, r4
+ 342 00a8 0D60     		str	r5, [r1]
+ 343 00aa 4D68     		ldr	r5, [r1, #4]
+ 344 00ac A543     		bics	r5, r4
+ 345 00ae 4D60     		str	r5, [r1, #4]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 7
+
+
+ 346 00b0 CD68     		ldr	r5, [r1, #12]
+ 347 00b2 A543     		bics	r5, r4
+ 348 00b4 CD60     		str	r5, [r1, #12]
+ 349 00b6 8D68     		ldr	r5, [r1, #8]
+ 350 00b8 A543     		bics	r5, r4
+ 351 00ba 8D60     		str	r5, [r1, #8]
+ 352 00bc 0549     		ldr	r1, .L40
+ 353 00be 8C46     		mov	ip, r1
+ 354 00c0 0237     		adds	r7, r7, #2
+ 355 00c2 B900     		lsls	r1, r7, #2
+ 356 00c4 6446     		mov	r4, ip
+ 357 00c6 0D59     		ldr	r5, [r1, r4]
+ 358 00c8 B543     		bics	r5, r6
+ 359 00ca 0D51     		str	r5, [r1, r4]
+ 360 00cc A4E7     		b	.L31
+ 361              	.L38:
+ 362              		@ sp needed
+ 363 00ce 80BC     		pop	{r7}
+ 364 00d0 B846     		mov	r8, r7
+ 365 00d2 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 366              	.L41:
+ 367              		.align	2
+ 368              	.L40:
+ 369 00d4 00000140 		.word	1073807360
+ 370 00d8 00040048 		.word	1207960576
+ 371 00dc 00080048 		.word	1207961600
+ 372 00e0 000C0048 		.word	1207962624
+ 373 00e4 00040140 		.word	1073808384
+ 375              		.section	.text.HAL_GPIO_ReadPin,"ax",%progbits
+ 376              		.align	1
+ 377              		.global	HAL_GPIO_ReadPin
+ 378              		.syntax unified
+ 379              		.code	16
+ 380              		.thumb_func
+ 382              	HAL_GPIO_ReadPin:
+ 383              		@ args = 0, pretend = 0, frame = 0
+ 384              		@ frame_needed = 0, uses_anonymous_args = 0
+ 385              		@ link register save eliminated.
+ 386 0000 0369     		ldr	r3, [r0, #16]
+ 387 0002 0B42     		tst	r3, r1
+ 388 0004 01D0     		beq	.L44
+ 389 0006 0120     		movs	r0, #1
+ 390              	.L43:
+ 391              		@ sp needed
+ 392 0008 7047     		bx	lr
+ 393              	.L44:
+ 394 000a 0020     		movs	r0, #0
+ 395 000c FCE7     		b	.L43
+ 397              		.section	.text.HAL_GPIO_WritePin,"ax",%progbits
+ 398              		.align	1
+ 399              		.global	HAL_GPIO_WritePin
+ 400              		.syntax unified
+ 401              		.code	16
+ 402              		.thumb_func
+ 404              	HAL_GPIO_WritePin:
+ 405              		@ args = 0, pretend = 0, frame = 0
+ 406              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 8
+
+
+ 407              		@ link register save eliminated.
+ 408 0000 002A     		cmp	r2, #0
+ 409 0002 01D0     		beq	.L46
+ 410 0004 8161     		str	r1, [r0, #24]
+ 411              	.L45:
+ 412              		@ sp needed
+ 413 0006 7047     		bx	lr
+ 414              	.L46:
+ 415 0008 8162     		str	r1, [r0, #40]
+ 416 000a FCE7     		b	.L45
+ 418              		.section	.text.HAL_GPIO_TogglePin,"ax",%progbits
+ 419              		.align	1
+ 420              		.global	HAL_GPIO_TogglePin
+ 421              		.syntax unified
+ 422              		.code	16
+ 423              		.thumb_func
+ 425              	HAL_GPIO_TogglePin:
+ 426              		@ args = 0, pretend = 0, frame = 0
+ 427              		@ frame_needed = 0, uses_anonymous_args = 0
+ 428              		@ link register save eliminated.
+ 429 0000 4269     		ldr	r2, [r0, #20]
+ 430 0002 1300     		movs	r3, r2
+ 431 0004 0B40     		ands	r3, r1
+ 432 0006 1B04     		lsls	r3, r3, #16
+ 433 0008 9143     		bics	r1, r2
+ 434 000a 0B43     		orrs	r3, r1
+ 435 000c 8361     		str	r3, [r0, #24]
+ 436              		@ sp needed
+ 437 000e 7047     		bx	lr
+ 439              		.section	.text.HAL_GPIO_LockPin,"ax",%progbits
+ 440              		.align	1
+ 441              		.global	HAL_GPIO_LockPin
+ 442              		.syntax unified
+ 443              		.code	16
+ 444              		.thumb_func
+ 446              	HAL_GPIO_LockPin:
+ 447              		@ args = 0, pretend = 0, frame = 8
+ 448              		@ frame_needed = 0, uses_anonymous_args = 0
+ 449              		@ link register save eliminated.
+ 450 0000 82B0     		sub	sp, sp, #8
+ 451 0002 8022     		movs	r2, #128
+ 452 0004 5202     		lsls	r2, r2, #9
+ 453 0006 0192     		str	r2, [sp, #4]
+ 454 0008 019B     		ldr	r3, [sp, #4]
+ 455 000a 0B43     		orrs	r3, r1
+ 456 000c 0193     		str	r3, [sp, #4]
+ 457 000e 019B     		ldr	r3, [sp, #4]
+ 458 0010 C361     		str	r3, [r0, #28]
+ 459 0012 C161     		str	r1, [r0, #28]
+ 460 0014 019B     		ldr	r3, [sp, #4]
+ 461 0016 C361     		str	r3, [r0, #28]
+ 462 0018 C369     		ldr	r3, [r0, #28]
+ 463 001a 0193     		str	r3, [sp, #4]
+ 464 001c C369     		ldr	r3, [r0, #28]
+ 465 001e 1342     		tst	r3, r2
+ 466 0020 02D0     		beq	.L51
+ 467 0022 0020     		movs	r0, #0
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 9
+
+
+ 468              	.L50:
+ 469 0024 02B0     		add	sp, sp, #8
+ 470              		@ sp needed
+ 471 0026 7047     		bx	lr
+ 472              	.L51:
+ 473 0028 0120     		movs	r0, #1
+ 474 002a FBE7     		b	.L50
+ 476              		.section	.text.HAL_GPIO_EXTI_Callback,"ax",%progbits
+ 477              		.align	1
+ 478              		.weak	HAL_GPIO_EXTI_Callback
+ 479              		.syntax unified
+ 480              		.code	16
+ 481              		.thumb_func
+ 483              	HAL_GPIO_EXTI_Callback:
+ 484              		@ args = 0, pretend = 0, frame = 0
+ 485              		@ frame_needed = 0, uses_anonymous_args = 0
+ 486              		@ link register save eliminated.
+ 487              		@ sp needed
+ 488 0000 7047     		bx	lr
+ 490              		.section	.text.HAL_GPIO_EXTI_IRQHandler,"ax",%progbits
+ 491              		.align	1
+ 492              		.global	HAL_GPIO_EXTI_IRQHandler
+ 493              		.syntax unified
+ 494              		.code	16
+ 495              		.thumb_func
+ 497              	HAL_GPIO_EXTI_IRQHandler:
+ 498              		@ args = 0, pretend = 0, frame = 0
+ 499              		@ frame_needed = 0, uses_anonymous_args = 0
+ 500 0000 10B5     		push	{r4, lr}
+ 501 0002 054B     		ldr	r3, .L56
+ 502 0004 5B69     		ldr	r3, [r3, #20]
+ 503 0006 1842     		tst	r0, r3
+ 504 0008 00D1     		bne	.L55
+ 505              	.L53:
+ 506              		@ sp needed
+ 507 000a 10BD     		pop	{r4, pc}
+ 508              	.L55:
+ 509 000c 024B     		ldr	r3, .L56
+ 510 000e 5861     		str	r0, [r3, #20]
+ 511 0010 FFF7FEFF 		bl	HAL_GPIO_EXTI_Callback
+ 512 0014 F9E7     		b	.L53
+ 513              	.L57:
+ 514 0016 C046     		.align	2
+ 515              	.L56:
+ 516 0018 00040140 		.word	1073808384
+ 518              		.ident	"GCC: (xPack GNU Arm Embedded GCC x86_64) 15.2.1 20251203"
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s 			page 10
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 stm32f0xx_hal_gpio.c
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:16     .text.HAL_GPIO_Init:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:22     .text.HAL_GPIO_Init:00000000 HAL_GPIO_Init
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:232    .text.HAL_GPIO_Init:00000174 $d
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:240    .text.HAL_GPIO_DeInit:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:246    .text.HAL_GPIO_DeInit:00000000 HAL_GPIO_DeInit
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:369    .text.HAL_GPIO_DeInit:000000d4 $d
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:376    .text.HAL_GPIO_ReadPin:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:382    .text.HAL_GPIO_ReadPin:00000000 HAL_GPIO_ReadPin
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:398    .text.HAL_GPIO_WritePin:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:404    .text.HAL_GPIO_WritePin:00000000 HAL_GPIO_WritePin
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:419    .text.HAL_GPIO_TogglePin:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:425    .text.HAL_GPIO_TogglePin:00000000 HAL_GPIO_TogglePin
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:440    .text.HAL_GPIO_LockPin:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:446    .text.HAL_GPIO_LockPin:00000000 HAL_GPIO_LockPin
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:477    .text.HAL_GPIO_EXTI_Callback:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:483    .text.HAL_GPIO_EXTI_Callback:00000000 HAL_GPIO_EXTI_Callback
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:491    .text.HAL_GPIO_EXTI_IRQHandler:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:497    .text.HAL_GPIO_EXTI_IRQHandler:00000000 HAL_GPIO_EXTI_IRQHandler
+C:\Users\fastr\AppData\Local\Temp\cciD4dpc.s:516    .text.HAL_GPIO_EXTI_IRQHandler:00000018 $d
+
+NO UNDEFINED SYMBOLS

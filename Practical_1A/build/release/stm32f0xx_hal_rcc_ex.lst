@@ -1,0 +1,437 @@
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"stm32f0xx_hal_rcc_ex.c"
+  14              		.text
+  15              		.section	.text.HAL_RCCEx_PeriphCLKConfig,"ax",%progbits
+  16              		.align	1
+  17              		.global	HAL_RCCEx_PeriphCLKConfig
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  22              	HAL_RCCEx_PeriphCLKConfig:
+  23              		@ args = 0, pretend = 0, frame = 8
+  24              		@ frame_needed = 0, uses_anonymous_args = 0
+  25 0000 70B5     		push	{r4, r5, r6, lr}
+  26 0002 82B0     		sub	sp, sp, #8
+  27 0004 0400     		movs	r4, r0
+  28 0006 0368     		ldr	r3, [r0]
+  29 0008 DB03     		lsls	r3, r3, #15
+  30 000a 3CD5     		bpl	.L2
+  31 000c 454B     		ldr	r3, .L25
+  32 000e DB69     		ldr	r3, [r3, #28]
+  33 0010 DB00     		lsls	r3, r3, #3
+  34 0012 59D4     		bmi	.L13
+  35 0014 434B     		ldr	r3, .L25
+  36 0016 DA69     		ldr	r2, [r3, #28]
+  37 0018 8021     		movs	r1, #128
+  38 001a 4905     		lsls	r1, r1, #21
+  39 001c 0A43     		orrs	r2, r1
+  40 001e DA61     		str	r2, [r3, #28]
+  41 0020 DB69     		ldr	r3, [r3, #28]
+  42 0022 0B40     		ands	r3, r1
+  43 0024 0193     		str	r3, [sp, #4]
+  44 0026 019B     		ldr	r3, [sp, #4]
+  45 0028 0123     		movs	r3, #1
+  46 002a 1E00     		movs	r6, r3
+  47              	.L3:
+  48 002c 3E4B     		ldr	r3, .L25+4
+  49 002e 1B68     		ldr	r3, [r3]
+  50 0030 DB05     		lsls	r3, r3, #23
+  51 0032 4CD5     		bpl	.L22
+  52              	.L4:
+  53 0034 3B4B     		ldr	r3, .L25
+  54 0036 1A6A     		ldr	r2, [r3, #32]
+  55 0038 C023     		movs	r3, #192
+  56 003a 9B00     		lsls	r3, r3, #2
+  57 003c 1100     		movs	r1, r2
+  58 003e 1940     		ands	r1, r3
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 2
+
+
+  59 0040 1A42     		tst	r2, r3
+  60 0042 17D0     		beq	.L8
+  61 0044 6368     		ldr	r3, [r4, #4]
+  62 0046 C022     		movs	r2, #192
+  63 0048 9200     		lsls	r2, r2, #2
+  64 004a 1340     		ands	r3, r2
+  65 004c 8B42     		cmp	r3, r1
+  66 004e 11D0     		beq	.L8
+  67 0050 344B     		ldr	r3, .L25
+  68 0052 1A6A     		ldr	r2, [r3, #32]
+  69 0054 3549     		ldr	r1, .L25+8
+  70 0056 1140     		ands	r1, r2
+  71 0058 186A     		ldr	r0, [r3, #32]
+  72 005a 8446     		mov	ip, r0
+  73 005c 8020     		movs	r0, #128
+  74 005e 4002     		lsls	r0, r0, #9
+  75 0060 6546     		mov	r5, ip
+  76 0062 2843     		orrs	r0, r5
+  77 0064 1862     		str	r0, [r3, #32]
+  78 0066 186A     		ldr	r0, [r3, #32]
+  79 0068 314D     		ldr	r5, .L25+12
+  80 006a 2840     		ands	r0, r5
+  81 006c 1862     		str	r0, [r3, #32]
+  82 006e 1962     		str	r1, [r3, #32]
+  83 0070 D207     		lsls	r2, r2, #31
+  84 0072 40D4     		bmi	.L23
+  85              	.L8:
+  86 0074 2B4A     		ldr	r2, .L25
+  87 0076 136A     		ldr	r3, [r2, #32]
+  88 0078 2C49     		ldr	r1, .L25+8
+  89 007a 0B40     		ands	r3, r1
+  90 007c 6168     		ldr	r1, [r4, #4]
+  91 007e 0B43     		orrs	r3, r1
+  92 0080 1362     		str	r3, [r2, #32]
+  93 0082 012E     		cmp	r6, #1
+  94 0084 46D0     		beq	.L24
+  95              	.L2:
+  96 0086 2368     		ldr	r3, [r4]
+  97 0088 DB07     		lsls	r3, r3, #31
+  98 008a 06D5     		bpl	.L11
+  99 008c 254A     		ldr	r2, .L25
+ 100 008e 136B     		ldr	r3, [r2, #48]
+ 101 0090 0321     		movs	r1, #3
+ 102 0092 8B43     		bics	r3, r1
+ 103 0094 A168     		ldr	r1, [r4, #8]
+ 104 0096 0B43     		orrs	r3, r1
+ 105 0098 1363     		str	r3, [r2, #48]
+ 106              	.L11:
+ 107 009a 2368     		ldr	r3, [r4]
+ 108 009c 9B06     		lsls	r3, r3, #26
+ 109 009e 06D5     		bpl	.L12
+ 110 00a0 204A     		ldr	r2, .L25
+ 111 00a2 136B     		ldr	r3, [r2, #48]
+ 112 00a4 1021     		movs	r1, #16
+ 113 00a6 8B43     		bics	r3, r1
+ 114 00a8 E168     		ldr	r1, [r4, #12]
+ 115 00aa 0B43     		orrs	r3, r1
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 3
+
+
+ 116 00ac 1363     		str	r3, [r2, #48]
+ 117              	.L12:
+ 118 00ae 2368     		ldr	r3, [r4]
+ 119 00b0 5B05     		lsls	r3, r3, #21
+ 120 00b2 34D5     		bpl	.L16
+ 121 00b4 1B4A     		ldr	r2, .L25
+ 122 00b6 136B     		ldr	r3, [r2, #48]
+ 123 00b8 4021     		movs	r1, #64
+ 124 00ba 8B43     		bics	r3, r1
+ 125 00bc 2169     		ldr	r1, [r4, #16]
+ 126 00be 0B43     		orrs	r3, r1
+ 127 00c0 1363     		str	r3, [r2, #48]
+ 128 00c2 0020     		movs	r0, #0
+ 129              	.L6:
+ 130 00c4 02B0     		add	sp, sp, #8
+ 131              		@ sp needed
+ 132 00c6 70BD     		pop	{r4, r5, r6, pc}
+ 133              	.L13:
+ 134 00c8 0023     		movs	r3, #0
+ 135 00ca 1E00     		movs	r6, r3
+ 136 00cc AEE7     		b	.L3
+ 137              	.L22:
+ 138 00ce 164A     		ldr	r2, .L25+4
+ 139 00d0 1168     		ldr	r1, [r2]
+ 140 00d2 8023     		movs	r3, #128
+ 141 00d4 5B00     		lsls	r3, r3, #1
+ 142 00d6 0B43     		orrs	r3, r1
+ 143 00d8 1360     		str	r3, [r2]
+ 144 00da FFF7FEFF 		bl	HAL_GetTick
+ 145 00de 0500     		movs	r5, r0
+ 146              	.L5:
+ 147 00e0 114B     		ldr	r3, .L25+4
+ 148 00e2 1B68     		ldr	r3, [r3]
+ 149 00e4 DB05     		lsls	r3, r3, #23
+ 150 00e6 A5D4     		bmi	.L4
+ 151 00e8 FFF7FEFF 		bl	HAL_GetTick
+ 152 00ec 401B     		subs	r0, r0, r5
+ 153 00ee 6428     		cmp	r0, #100
+ 154 00f0 F6D9     		bls	.L5
+ 155 00f2 0320     		movs	r0, #3
+ 156 00f4 E6E7     		b	.L6
+ 157              	.L23:
+ 158 00f6 FFF7FEFF 		bl	HAL_GetTick
+ 159 00fa 0500     		movs	r5, r0
+ 160              	.L9:
+ 161 00fc 094B     		ldr	r3, .L25
+ 162 00fe 1B6A     		ldr	r3, [r3, #32]
+ 163 0100 9B07     		lsls	r3, r3, #30
+ 164 0102 B7D4     		bmi	.L8
+ 165 0104 FFF7FEFF 		bl	HAL_GetTick
+ 166 0108 401B     		subs	r0, r0, r5
+ 167 010a 0A4B     		ldr	r3, .L25+16
+ 168 010c 9842     		cmp	r0, r3
+ 169 010e F5D9     		bls	.L9
+ 170 0110 0320     		movs	r0, #3
+ 171 0112 D7E7     		b	.L6
+ 172              	.L24:
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 4
+
+
+ 173 0114 D369     		ldr	r3, [r2, #28]
+ 174 0116 0849     		ldr	r1, .L25+20
+ 175 0118 0B40     		ands	r3, r1
+ 176 011a D361     		str	r3, [r2, #28]
+ 177 011c B3E7     		b	.L2
+ 178              	.L16:
+ 179 011e 0020     		movs	r0, #0
+ 180 0120 D0E7     		b	.L6
+ 181              	.L26:
+ 182 0122 C046     		.align	2
+ 183              	.L25:
+ 184 0124 00100240 		.word	1073876992
+ 185 0128 00700040 		.word	1073770496
+ 186 012c FFFCFFFF 		.word	-769
+ 187 0130 FFFFFEFF 		.word	-65537
+ 188 0134 88130000 		.word	5000
+ 189 0138 FFFFFFEF 		.word	-268435457
+ 191              		.section	.text.HAL_RCCEx_GetPeriphCLKConfig,"ax",%progbits
+ 192              		.align	1
+ 193              		.global	HAL_RCCEx_GetPeriphCLKConfig
+ 194              		.syntax unified
+ 195              		.code	16
+ 196              		.thumb_func
+ 198              	HAL_RCCEx_GetPeriphCLKConfig:
+ 199              		@ args = 0, pretend = 0, frame = 0
+ 200              		@ frame_needed = 0, uses_anonymous_args = 0
+ 201              		@ link register save eliminated.
+ 202 0000 0B4B     		ldr	r3, .L28
+ 203 0002 0360     		str	r3, [r0]
+ 204 0004 0B4B     		ldr	r3, .L28+4
+ 205 0006 1A6A     		ldr	r2, [r3, #32]
+ 206 0008 C021     		movs	r1, #192
+ 207 000a 8900     		lsls	r1, r1, #2
+ 208 000c 0A40     		ands	r2, r1
+ 209 000e 4260     		str	r2, [r0, #4]
+ 210 0010 196B     		ldr	r1, [r3, #48]
+ 211 0012 0322     		movs	r2, #3
+ 212 0014 0A40     		ands	r2, r1
+ 213 0016 8260     		str	r2, [r0, #8]
+ 214 0018 196B     		ldr	r1, [r3, #48]
+ 215 001a 1022     		movs	r2, #16
+ 216 001c 0A40     		ands	r2, r1
+ 217 001e C260     		str	r2, [r0, #12]
+ 218 0020 054A     		ldr	r2, .L28+8
+ 219 0022 0260     		str	r2, [r0]
+ 220 0024 1A6B     		ldr	r2, [r3, #48]
+ 221 0026 4023     		movs	r3, #64
+ 222 0028 1340     		ands	r3, r2
+ 223 002a 0361     		str	r3, [r0, #16]
+ 224              		@ sp needed
+ 225 002c 7047     		bx	lr
+ 226              	.L29:
+ 227 002e C046     		.align	2
+ 228              	.L28:
+ 229 0030 21000100 		.word	65569
+ 230 0034 00100240 		.word	1073876992
+ 231 0038 21040100 		.word	66593
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 5
+
+
+ 233              		.section	.text.HAL_RCCEx_GetPeriphCLKFreq,"ax",%progbits
+ 234              		.align	1
+ 235              		.global	HAL_RCCEx_GetPeriphCLKFreq
+ 236              		.syntax unified
+ 237              		.code	16
+ 238              		.thumb_func
+ 240              	HAL_RCCEx_GetPeriphCLKFreq:
+ 241              		@ args = 0, pretend = 0, frame = 0
+ 242              		@ frame_needed = 0, uses_anonymous_args = 0
+ 243 0000 10B5     		push	{r4, lr}
+ 244 0002 8023     		movs	r3, #128
+ 245 0004 DB00     		lsls	r3, r3, #3
+ 246 0006 9842     		cmp	r0, r3
+ 247 0008 69D0     		beq	.L31
+ 248 000a 12D8     		bhi	.L32
+ 249 000c 0128     		cmp	r0, #1
+ 250 000e 3ED0     		beq	.L33
+ 251 0010 2028     		cmp	r0, #32
+ 252 0012 0CD1     		bne	.L52
+ 253 0014 3E4B     		ldr	r3, .L60
+ 254 0016 1B6B     		ldr	r3, [r3, #48]
+ 255 0018 DB06     		lsls	r3, r3, #27
+ 256 001a 5DD4     		bmi	.L41
+ 257 001c 3C4B     		ldr	r3, .L60
+ 258 001e 1B68     		ldr	r3, [r3]
+ 259 0020 0222     		movs	r2, #2
+ 260 0022 1000     		movs	r0, r2
+ 261 0024 1840     		ands	r0, r3
+ 262 0026 1A42     		tst	r2, r3
+ 263 0028 19D0     		beq	.L30
+ 264 002a 3A48     		ldr	r0, .L60+4
+ 265 002c 17E0     		b	.L30
+ 266              	.L52:
+ 267 002e 0020     		movs	r0, #0
+ 268 0030 15E0     		b	.L30
+ 269              	.L32:
+ 270 0032 8023     		movs	r3, #128
+ 271 0034 5B02     		lsls	r3, r3, #9
+ 272 0036 9842     		cmp	r0, r3
+ 273 0038 68D1     		bne	.L43
+ 274 003a 354B     		ldr	r3, .L60
+ 275 003c 1B6A     		ldr	r3, [r3, #32]
+ 276 003e C022     		movs	r2, #192
+ 277 0040 9200     		lsls	r2, r2, #2
+ 278 0042 1340     		ands	r3, r2
+ 279 0044 8022     		movs	r2, #128
+ 280 0046 5200     		lsls	r2, r2, #1
+ 281 0048 9342     		cmp	r3, r2
+ 282 004a 09D0     		beq	.L53
+ 283              	.L36:
+ 284 004c 8022     		movs	r2, #128
+ 285 004e 9200     		lsls	r2, r2, #2
+ 286 0050 9342     		cmp	r3, r2
+ 287 0052 0CD0     		beq	.L54
+ 288              	.L37:
+ 289 0054 C022     		movs	r2, #192
+ 290 0056 9200     		lsls	r2, r2, #2
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 6
+
+
+ 291 0058 9342     		cmp	r3, r2
+ 292 005a 0ED0     		beq	.L55
+ 293 005c 0020     		movs	r0, #0
+ 294              	.L30:
+ 295              		@ sp needed
+ 296 005e 10BD     		pop	{r4, pc}
+ 297              	.L53:
+ 298 0060 2B4A     		ldr	r2, .L60
+ 299 0062 126A     		ldr	r2, [r2, #32]
+ 300 0064 9207     		lsls	r2, r2, #30
+ 301 0066 F1D5     		bpl	.L36
+ 302 0068 8020     		movs	r0, #128
+ 303 006a 0002     		lsls	r0, r0, #8
+ 304 006c F7E7     		b	.L30
+ 305              	.L54:
+ 306 006e 284A     		ldr	r2, .L60
+ 307 0070 526A     		ldr	r2, [r2, #36]
+ 308 0072 9207     		lsls	r2, r2, #30
+ 309 0074 EED5     		bpl	.L37
+ 310 0076 2848     		ldr	r0, .L60+8
+ 311 0078 F1E7     		b	.L30
+ 312              	.L55:
+ 313 007a 254B     		ldr	r3, .L60
+ 314 007c 1A68     		ldr	r2, [r3]
+ 315 007e 8023     		movs	r3, #128
+ 316 0080 9B02     		lsls	r3, r3, #10
+ 317 0082 1000     		movs	r0, r2
+ 318 0084 1840     		ands	r0, r3
+ 319 0086 1A42     		tst	r2, r3
+ 320 0088 E9D0     		beq	.L30
+ 321 008a 2448     		ldr	r0, .L60+12
+ 322 008c E7E7     		b	.L30
+ 323              	.L33:
+ 324 008e 204B     		ldr	r3, .L60
+ 325 0090 1B6B     		ldr	r3, [r3, #48]
+ 326 0092 0322     		movs	r2, #3
+ 327 0094 1100     		movs	r1, r2
+ 328 0096 1940     		ands	r1, r3
+ 329 0098 1A42     		tst	r2, r3
+ 330 009a 07D0     		beq	.L56
+ 331 009c 0329     		cmp	r1, #3
+ 332 009e 08D0     		beq	.L57
+ 333              	.L39:
+ 334 00a0 0129     		cmp	r1, #1
+ 335 00a2 0CD0     		beq	.L58
+ 336 00a4 0229     		cmp	r1, #2
+ 337 00a6 0DD0     		beq	.L59
+ 338 00a8 0020     		movs	r0, #0
+ 339 00aa D8E7     		b	.L30
+ 340              	.L56:
+ 341 00ac FFF7FEFF 		bl	HAL_RCC_GetPCLK1Freq
+ 342 00b0 D5E7     		b	.L30
+ 343              	.L57:
+ 344 00b2 174B     		ldr	r3, .L60
+ 345 00b4 1B68     		ldr	r3, [r3]
+ 346 00b6 9B07     		lsls	r3, r3, #30
+ 347 00b8 F2D5     		bpl	.L39
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 7
+
+
+ 348 00ba 1648     		ldr	r0, .L60+4
+ 349 00bc CFE7     		b	.L30
+ 350              	.L58:
+ 351 00be FFF7FEFF 		bl	HAL_RCC_GetSysClockFreq
+ 352 00c2 CCE7     		b	.L30
+ 353              	.L59:
+ 354 00c4 124B     		ldr	r3, .L60
+ 355 00c6 1B6A     		ldr	r3, [r3, #32]
+ 356 00c8 0222     		movs	r2, #2
+ 357 00ca 1000     		movs	r0, r2
+ 358 00cc 1840     		ands	r0, r3
+ 359 00ce 1A42     		tst	r2, r3
+ 360 00d0 C5D0     		beq	.L30
+ 361 00d2 8020     		movs	r0, #128
+ 362 00d4 0002     		lsls	r0, r0, #8
+ 363 00d6 C2E7     		b	.L30
+ 364              	.L41:
+ 365 00d8 FFF7FEFF 		bl	HAL_RCC_GetSysClockFreq
+ 366 00dc BFE7     		b	.L30
+ 367              	.L31:
+ 368 00de 0C4B     		ldr	r3, .L60
+ 369 00e0 1B6B     		ldr	r3, [r3, #48]
+ 370 00e2 5B06     		lsls	r3, r3, #25
+ 371 00e4 08D4     		bmi	.L42
+ 372 00e6 0A4B     		ldr	r3, .L60
+ 373 00e8 1B68     		ldr	r3, [r3]
+ 374 00ea 0222     		movs	r2, #2
+ 375 00ec 1000     		movs	r0, r2
+ 376 00ee 1840     		ands	r0, r3
+ 377 00f0 1A42     		tst	r2, r3
+ 378 00f2 B4D0     		beq	.L30
+ 379 00f4 0748     		ldr	r0, .L60+4
+ 380 00f6 B2E7     		b	.L30
+ 381              	.L42:
+ 382 00f8 054B     		ldr	r3, .L60
+ 383 00fa 1B6A     		ldr	r3, [r3, #32]
+ 384 00fc 0222     		movs	r2, #2
+ 385 00fe 1000     		movs	r0, r2
+ 386 0100 1840     		ands	r0, r3
+ 387 0102 1A42     		tst	r2, r3
+ 388 0104 ABD0     		beq	.L30
+ 389 0106 8020     		movs	r0, #128
+ 390 0108 0002     		lsls	r0, r0, #8
+ 391 010a A8E7     		b	.L30
+ 392              	.L43:
+ 393 010c 0020     		movs	r0, #0
+ 394 010e A6E7     		b	.L30
+ 395              	.L61:
+ 396              		.align	2
+ 397              	.L60:
+ 398 0110 00100240 		.word	1073876992
+ 399 0114 00127A00 		.word	8000000
+ 400 0118 409C0000 		.word	40000
+ 401 011c 90D00300 		.word	250000
+ 403              		.ident	"GCC: (xPack GNU Arm Embedded GCC x86_64) 15.2.1 20251203"
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 stm32f0xx_hal_rcc_ex.c
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:16     .text.HAL_RCCEx_PeriphCLKConfig:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:22     .text.HAL_RCCEx_PeriphCLKConfig:00000000 HAL_RCCEx_PeriphCLKConfig
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:184    .text.HAL_RCCEx_PeriphCLKConfig:00000124 $d
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:192    .text.HAL_RCCEx_GetPeriphCLKConfig:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:198    .text.HAL_RCCEx_GetPeriphCLKConfig:00000000 HAL_RCCEx_GetPeriphCLKConfig
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:229    .text.HAL_RCCEx_GetPeriphCLKConfig:00000030 $d
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:234    .text.HAL_RCCEx_GetPeriphCLKFreq:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:240    .text.HAL_RCCEx_GetPeriphCLKFreq:00000000 HAL_RCCEx_GetPeriphCLKFreq
+C:\Users\fastr\AppData\Local\Temp\ccSP1Llk.s:398    .text.HAL_RCCEx_GetPeriphCLKFreq:00000110 $d
+
+UNDEFINED SYMBOLS
+HAL_GetTick
+HAL_RCC_GetPCLK1Freq
+HAL_RCC_GetSysClockFreq
