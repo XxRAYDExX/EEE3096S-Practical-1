@@ -1,253 +1,99 @@
-/* USER CODE BEGIN Header /
 /*
-
-@file           : main.c
-
-@brief          : Task 2 - Running light with debounced speed toggle
-
-/
-/ USER CODE END Header */
-
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
+ * Task 7: Software PWM via Timer Interrupts
+ * Target: STM32F051C8 (UCT Dev Board)
+ * Output: PB5 (Byte of LEDs bit D5)
+ * Signal: 100 Hz, 30% duty cycle, generated entirely in software
+ */
 #include "stm32f0xx.h"
-#include <stdint.h>
 
-/* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim16;
+#define TIM16_PSC_VALUE   7
+#define TIM16_ARR_VALUE   99
 
-/* USER CODE BEGIN PV */
-volatile uint8_t timer_event = 0;
-volatile uint8_t current_led = 0;
-volatile int8_t direction = 1;
+static void GPIO_Init(void);
+static void TIM16_Init(void);
 
-// LED arrays
-GPIO_TypeDef* led_ports[8] = {GPIOB, GPIOB, GPIOB, GPIOB,
-GPIOB, GPIOB, GPIOB, GPIOB};
-uint16_t led_pins[8] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3,
-GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6, GPIO_PIN_7};
-
-// TODO: Define your debounce delay based on your oscilloscope measurement
-#define DEBOUNCE_MS 25
-uint32_t last_button_press_time = 0;
-
-// Speed state: 0 = slow (1s), 1 = fast (0.5s)
-uint8_t speed_state = 0;
-
-// Current ARR value (stored for reference)
-uint32_t current_arr = 999;
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_TIM16_Init(void);
-void TIM16_IRQHandler(void);
-void turn_off_all_leds(void);
-void update_led_pattern(void);
-void handle_button_press(void);
-void change_timer_period(uint32_t new_period_ms);
-
-/* USER CODE BEGIN 0 */
-void turn_off_all_leds(void)
-{
-// TODO: Iterate through the LED array. Set all pins to GPIO_PIN_RESET.
-  for(uint8_t i = 0; i < 8; i++){
-      HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
-  }
-}
-
-void update_led_pattern(void)
-{
-// TODO: Turn off all LEDs.
-turn_off_all_leds();
-
-// TODO: Turn on the specific LED at index 'current_led'.
-HAL_GPIO_WritePin(GPIOB, led_pins[current_led], GPIO_PIN_SET);
-
-// TODO: Increment or decrement 'current_led' based on 'direction'.
-current_led += direction;
-
-// TODO: Reverse 'direction' when reaching the ends (0 or 7).
-if(current_led == 7){
-      direction = -1;
-    }
-    else if(current_led == 0){
-      direction = 1;
-    }
-}
-
-void change_timer_period(uint32_t new_period_ms)
-{
-// TODO: Calculate the new ARR value using your formula.
-// Note: Timer clock is 1000 Hz (Prescaler is 7999).
-uint32_t new_arr = new_period_ms - 1; // Replace 0 with your calculation.
-
-// TODO: Update the TIM16 ARR register directly.
-TIM16->ARR = new_arr;
-
-// TODO: Reset the TIM16 CNT register to 0.
-TIM16->CNT = 0;
-
-
-// Store the new ARR value for reference
-current_arr = new_arr;
-}
-
-void handle_button_press(void)
-{
-// TODO: Get the current system tick using HAL_GetTick().
-uint32_t current_time = HAL_GetTick();
-
-// TODO: Check the time elapsed since the last valid press.
-// Compare the elapsed time against DEBOUNCE_MS.
-uint8_t debounce_passed = ((current_time - last_button_press_time) > DEBOUNCE_MS);
-
-
-// TODO: Read the PA0 button state. The button is active low.
-uint8_t button_pressed = (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == 0);
-
-// TODO: If a valid debounced press occurs:
-if(button_pressed && debounce_passed){
-  // 1. Update last_button_press_time.
-  last_button_press_time = current_time;
-  // 2. Toggle speed_state between 0 and 1.
-  speed_state = !speed_state;
-  // 3. Call change_timer_period() with 500 or 1000.
-  if(speed_state){
-    change_timer_period(500);
-  }
-  else{
-    change_timer_period(1000);
-  }
-}
-}
-/* USER CODE END 0 */
-
-/**
-
-@brief  The application entry point.
-
-@retval int
-*/
 int main(void)
 {
-HAL_Init();
-SystemClock_Config();
+    /* TODO: Initialize GPIO and TIM16 peripherals */
+    GPIO_Init();
+    TIM16_Init();
 
-MX_GPIO_Init();
-MX_TIM16_Init();
+    while (1)
+    {
+        /* All PWM generation happens in the ISR; main loop remains free */
+    }
+}
 
-/* USER CODE BEGIN 2 */
-turn_off_all_leds();
-
-// Start timer at 1-second period
-change_timer_period(1000);
-HAL_TIM_Base_Start_IT(&htim16);
-/* USER CODE END 2 */
-
-while (1)
+static void GPIO_Init(void)
 {
-/* USER CODE BEGIN WHILE */
-// Handle button press (debounced)
-handle_button_press();
+    /* TODO: Enable GPIOB clock */
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+    
+    /* TODO: Configure PB5 as a general purpose output, push-pull, medium speed, no pull-up/pull-down */
+    GPIOB->MODER &= ~(3U << (5 * 2));
+    GPIOB->MODER |=  (1U << (5 * 2));
 
-// Handle timer event
-if (timer_event) {
-  timer_event = 0;
-  update_led_pattern();
-}
-/* USER CODE END WHILE */
-}
+    GPIOB->OTYPER &= ~(1U << 5);
+
+    GPIOB->OSPEEDR &= ~(3U << (5 * 2));
+    GPIOB->OSPEEDR |=  (1U << (5 * 2));
+
+    GPIOB->PUPDR &= ~(3U << (5 * 2));
+    
+    /* TODO: Ensure PB5 starts low */
+    GPIOB->BRR = (1U << 5);
 }
 
-/**
-
-@brief System Clock Configuration (HSI 8 MHz)
-*/
-void SystemClock_Config(void)
+static void TIM16_Init(void)
 {
-LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
-while(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0) {}
-
-LL_RCC_HSI_Enable();
-while(LL_RCC_HSI_IsReady() != 1) {}
-
-LL_RCC_HSI_SetCalibTrimming(16);
-LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
-LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
-while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI) {}
-
-LL_SetSystemCoreClock(8000000);
-if (HAL_InitTick(TICK_INT_PRIORITY) != HAL_OK) {
-Error_Handler();
-}
-}
-
-/**
-
-@brief TIM16 Initialization - Prescaler fixed at 7999
-*/
-static void MX_TIM16_Init(void)
-{
-htim16.Instance = TIM16;
-htim16.Init.Prescaler = 7999;
-htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-htim16.Init.Period = 999;
-htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-htim16.Init.RepetitionCounter = 0;
-htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
-Error_Handler();
-}
-NVIC_EnableIRQ(TIM16_IRQn);
+    /* TODO: Enable TIM16 clock */
+    RCC->APB2ENR |= RCC_APB2ENR_TIM16EN;
+    
+    /* TODO: Set Prescaler and ARR values for 10 kHz interrupt frequency */
+    TIM16->PSC = TIM16_PSC_VALUE;
+    TIM16->ARR = TIM16_ARR_VALUE;
+    
+    /* TODO: Clear any pending update flag and enable the update interrupt (DIER) */
+    TIM16->SR &= ~TIM_SR_UIF;
+    TIM16->DIER |= TIM_DIER_UIE;
+    
+    /* TODO: Configure NVIC priority and enable TIM16 interrupt */
+    NVIC_SetPriority(TIM16_IRQn, 0);
+    NVIC_EnableIRQ(TIM16_IRQn);
+    
+    /* TODO: Enable the counter to start the interrupt stream */
+    TIM16->CR1 |= TIM_CR1_CEN;
 }
 
-/**
-
-@brief GPIO Initialization - PB0..PB7 as outputs, PA0 as input with pull-up
-*/
-static void MX_GPIO_Init(void)
-{
-__HAL_RCC_GPIOA_CLK_ENABLE();
-__HAL_RCC_GPIOB_CLK_ENABLE();
-
-GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-// Configure LEDs (PB0..PB7) as outputs
-GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-GPIO_InitStruct.Pull = GPIO_NOPULL;
-GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-for (uint8_t i = 0; i < 8; i++) {
-GPIO_InitStruct.Pin = led_pins[i];
-HAL_GPIO_Init(led_ports[i], &GPIO_InitStruct);
-}
-
-// Configure PA0 as input with pull-up (button active low)
-GPIO_InitStruct.Pin = GPIO_PIN_0;
-GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-GPIO_InitStruct.Pull = GPIO_PULLUP;
-HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-}
-
-/**
-
-@brief TIM16 interrupt handler - sets flag only
-*/
 void TIM16_IRQHandler(void)
 {
-HAL_TIM_IRQHandler(&htim16);
-timer_event = 1;
-}
-
-/**
-
-@brief Error handler
-*/
-void Error_Handler(void)
-{
-__disable_irq();
-while (1) {}
+    static uint8_t counter = 0;
+    
+    /* TODO: Check if the update interrupt flag (UIF) is set */
+    if (TIM16->SR & TIM_SR_UIF)
+    {
+    
+        /* TODO: Clear the update interrupt flag */
+        TIM16->SR &= ~TIM_SR_UIF;
+        
+        /* TODO: Implement 30% duty cycle logic: 
+         * If counter < 30, drive PB5 high using BSRR.
+         * If counter >= 30, drive PB5 low using BRR/BSRR. */
+         if (counter < 30)
+        {
+            GPIOB->BSRR = (1U << 5);// Drive PB5 High
+        }
+        else
+        {
+            GPIOB->BRR = (1U << 5);// Drive PB5 Low
+        }
+        
+        /* TODO: Increment counter and reset to zero when counter reaches 100 */
+        counter++;
+        if (counter >= 100)
+        {
+            counter = 0;
+        }
+      }
+    
 }
