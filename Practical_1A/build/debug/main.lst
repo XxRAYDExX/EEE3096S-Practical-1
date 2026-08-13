@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 1
 
 
    1              		.cpu cortex-m0
@@ -24,528 +24,823 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
   21              		.code	16
   22              		.thumb_func
   24              	MX_GPIO_Init:
-  25              	.LFB348:
-   1:Core/Src/main.c **** /* USER CODE BEGIN Header */
-   2:Core/Src/main.c **** /**
-   3:Core/Src/main.c ****   @file           : main.c
-   4:Core/Src/main.c ****   @brief          : Running light with timer interrupt skeleton
-   5:Core/Src/main.c ****   */
-   6:Core/Src/main.c **** /* USER CODE END Header */
+  25              	.LFB350:
+   1:Core/Src/main.c **** /* USER CODE BEGIN Header /
+   2:Core/Src/main.c **** /*
+   3:Core/Src/main.c **** 
+   4:Core/Src/main.c **** @file           : main.c
+   5:Core/Src/main.c **** 
+   6:Core/Src/main.c **** @brief          : Task 2 - Running light with debounced speed toggle
    7:Core/Src/main.c **** 
-   8:Core/Src/main.c **** /* Includes ------------------------------------------------------------------*/
-   9:Core/Src/main.c **** #include "main.h"
-  10:Core/Src/main.c **** #include "stm32f0xx.h"
-  11:Core/Src/main.c **** #include <stdint.h>
-  12:Core/Src/main.c **** 
-  13:Core/Src/main.c **** /* Private variables ---------------------------------------------------------*/
-  14:Core/Src/main.c **** TIM_HandleTypeDef htim16;
+   8:Core/Src/main.c **** /
+   9:Core/Src/main.c **** / USER CODE END Header */
+  10:Core/Src/main.c **** 
+  11:Core/Src/main.c **** /* Includes ------------------------------------------------------------------*/
+  12:Core/Src/main.c **** #include "main.h"
+  13:Core/Src/main.c **** #include "stm32f0xx.h"
+  14:Core/Src/main.c **** #include <stdint.h>
   15:Core/Src/main.c **** 
-  16:Core/Src/main.c **** /* USER CODE BEGIN PV */
-  17:Core/Src/main.c **** volatile uint8_t timer_event = 0;    // Flag to be set by ISR and polled in main loop
-  18:Core/Src/main.c **** volatile uint8_t current_led = 0;    // Track current LED index (0..7)
-  19:Core/Src/main.c **** volatile int8_t direction = 1;       // Track direction (+1 for forward, -1 for backward)
-  20:Core/Src/main.c **** 
-  21:Core/Src/main.c **** // LED port/pin arrays for easy indexing
-  22:Core/Src/main.c **** GPIO_TypeDef* led_ports[8] = {GPIOB, GPIOB, GPIOB, GPIOB, GPIOB, GPIOB, GPIOB, GPIOB};
-  23:Core/Src/main.c **** uint16_t led_pins[8] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_4, GPIO_PIN_5, GPI
-  24:Core/Src/main.c **** /* USER CODE END PV */
-  25:Core/Src/main.c **** 
-  26:Core/Src/main.c **** /* Private function prototypes -----------------------------------------------*/
-  27:Core/Src/main.c **** void SystemClock_Config(void);
-  28:Core/Src/main.c **** static void MX_GPIO_Init(void);
-  29:Core/Src/main.c **** static void MX_TIM16_Init(void);
-  30:Core/Src/main.c **** void TIM16_IRQHandler(void);
-  31:Core/Src/main.c **** void turn_off_all_leds(void);
-  32:Core/Src/main.c **** void update_led_pattern(void);
+  16:Core/Src/main.c **** /* Private variables ---------------------------------------------------------*/
+  17:Core/Src/main.c **** TIM_HandleTypeDef htim16;
+  18:Core/Src/main.c **** 
+  19:Core/Src/main.c **** /* USER CODE BEGIN PV */
+  20:Core/Src/main.c **** volatile uint8_t timer_event = 0;
+  21:Core/Src/main.c **** volatile uint8_t current_led = 0;
+  22:Core/Src/main.c **** volatile int8_t direction = 1;
+  23:Core/Src/main.c **** 
+  24:Core/Src/main.c **** // LED arrays
+  25:Core/Src/main.c **** GPIO_TypeDef* led_ports[8] = {GPIOB, GPIOB, GPIOB, GPIOB,
+  26:Core/Src/main.c **** GPIOB, GPIOB, GPIOB, GPIOB};
+  27:Core/Src/main.c **** uint16_t led_pins[8] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3,
+  28:Core/Src/main.c **** GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6, GPIO_PIN_7};
+  29:Core/Src/main.c **** 
+  30:Core/Src/main.c **** // TODO: Define your debounce delay based on your oscilloscope measurement
+  31:Core/Src/main.c **** #define DEBOUNCE_MS 25
+  32:Core/Src/main.c **** uint32_t last_button_press_time = 0;
   33:Core/Src/main.c **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 2
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 2
 
 
-  34:Core/Src/main.c **** /* USER CODE BEGIN 0 */
-  35:Core/Src/main.c **** void turn_off_all_leds(void)
-  36:Core/Src/main.c **** {
-  37:Core/Src/main.c ****     /* TODO: Iterate through the LED arrays and turn off all LEDs */
-  38:Core/Src/main.c ****     for(uint8_t i = 0; i < 8; i++){
-  39:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
-  40:Core/Src/main.c ****     }
-  41:Core/Src/main.c ****     
-  42:Core/Src/main.c **** }
-  43:Core/Src/main.c **** 
-  44:Core/Src/main.c **** void update_led_pattern(void)
-  45:Core/Src/main.c **** {
-  46:Core/Src/main.c ****     /* TODO: Implement the running light pattern logic */
-  47:Core/Src/main.c ****     // 1. Turn off all LEDs
-  48:Core/Src/main.c ****     turn_off_all_leds();
-  49:Core/Src/main.c **** 
-  50:Core/Src/main.c ****     // 2. Turn on the current LED
-  51:Core/Src/main.c ****     HAL_GPIO_WritePin(GPIOB, led_pins[current_led], GPIO_PIN_SET);
-  52:Core/Src/main.c **** 
-  53:Core/Src/main.c ****     // 3. Update the current_led index based on direction
-  54:Core/Src/main.c ****     current_led += direction;
-  55:Core/Src/main.c **** 
-  56:Core/Src/main.c ****     // 4. Handle direction reversal at the edges (without duplicating states)
-  57:Core/Src/main.c ****     if(current_led == 7){
-  58:Core/Src/main.c ****       direction = -1;
-  59:Core/Src/main.c ****     }
-  60:Core/Src/main.c ****     else if(current_led == 0){
-  61:Core/Src/main.c ****       direction = 1;
-  62:Core/Src/main.c ****     }
-  63:Core/Src/main.c ****     
-  64:Core/Src/main.c **** }
-  65:Core/Src/main.c **** /* USER CODE END 0 */
-  66:Core/Src/main.c **** 
-  67:Core/Src/main.c **** /**
-  68:Core/Src/main.c ****   @brief  The application entry point.
-  69:Core/Src/main.c ****   @retval int
-  70:Core/Src/main.c **** */
-  71:Core/Src/main.c **** int main(void)
-  72:Core/Src/main.c **** {
-  73:Core/Src/main.c ****     HAL_Init();
-  74:Core/Src/main.c ****     SystemClock_Config();
-  75:Core/Src/main.c ****     MX_GPIO_Init();
-  76:Core/Src/main.c ****     MX_TIM16_Init();
-  77:Core/Src/main.c **** 
-  78:Core/Src/main.c ****     /* USER CODE BEGIN 2 */
-  79:Core/Src/main.c ****     // Ensure all LEDs are off at start
-  80:Core/Src/main.c ****     turn_off_all_leds();
-  81:Core/Src/main.c **** 
-  82:Core/Src/main.c ****     // Start the timer interrupt
-  83:Core/Src/main.c ****     HAL_TIM_Base_Start_IT(&htim16);
-  84:Core/Src/main.c ****     /* USER CODE END 2 */
+  34:Core/Src/main.c **** // Speed state: 0 = slow (1s), 1 = fast (0.5s)
+  35:Core/Src/main.c **** uint8_t speed_state = 0;
+  36:Core/Src/main.c **** 
+  37:Core/Src/main.c **** // Current ARR value (stored for reference)
+  38:Core/Src/main.c **** uint32_t current_arr = 999;
+  39:Core/Src/main.c **** /* USER CODE END PV */
+  40:Core/Src/main.c **** 
+  41:Core/Src/main.c **** /* Private function prototypes -----------------------------------------------*/
+  42:Core/Src/main.c **** void SystemClock_Config(void);
+  43:Core/Src/main.c **** static void MX_GPIO_Init(void);
+  44:Core/Src/main.c **** static void MX_TIM16_Init(void);
+  45:Core/Src/main.c **** void TIM16_IRQHandler(void);
+  46:Core/Src/main.c **** void turn_off_all_leds(void);
+  47:Core/Src/main.c **** void update_led_pattern(void);
+  48:Core/Src/main.c **** void handle_button_press(void);
+  49:Core/Src/main.c **** void change_timer_period(uint32_t new_period_ms);
+  50:Core/Src/main.c **** 
+  51:Core/Src/main.c **** /* USER CODE BEGIN 0 */
+  52:Core/Src/main.c **** void turn_off_all_leds(void)
+  53:Core/Src/main.c **** {
+  54:Core/Src/main.c **** // TODO: Iterate through the LED array. Set all pins to GPIO_PIN_RESET.
+  55:Core/Src/main.c ****   for(uint8_t i = 0; i < 8; i++){
+  56:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+  57:Core/Src/main.c ****   }
+  58:Core/Src/main.c **** }
+  59:Core/Src/main.c **** 
+  60:Core/Src/main.c **** void update_led_pattern(void)
+  61:Core/Src/main.c **** {
+  62:Core/Src/main.c **** // TODO: Turn off all LEDs.
+  63:Core/Src/main.c **** turn_off_all_leds();
+  64:Core/Src/main.c **** 
+  65:Core/Src/main.c **** // TODO: Turn on the specific LED at index 'current_led'.
+  66:Core/Src/main.c **** HAL_GPIO_WritePin(GPIOB, led_pins[current_led], GPIO_PIN_SET);
+  67:Core/Src/main.c **** 
+  68:Core/Src/main.c **** // TODO: Increment or decrement 'current_led' based on 'direction'.
+  69:Core/Src/main.c **** current_led += direction;
+  70:Core/Src/main.c **** 
+  71:Core/Src/main.c **** // TODO: Reverse 'direction' when reaching the ends (0 or 7).
+  72:Core/Src/main.c **** if(current_led == 7){
+  73:Core/Src/main.c ****       direction = -1;
+  74:Core/Src/main.c ****     }
+  75:Core/Src/main.c ****     else if(current_led == 0){
+  76:Core/Src/main.c ****       direction = 1;
+  77:Core/Src/main.c ****     }
+  78:Core/Src/main.c **** }
+  79:Core/Src/main.c **** 
+  80:Core/Src/main.c **** void change_timer_period(uint32_t new_period_ms)
+  81:Core/Src/main.c **** {
+  82:Core/Src/main.c **** // TODO: Calculate the new ARR value using your formula.
+  83:Core/Src/main.c **** // Note: Timer clock is 1000 Hz (Prescaler is 7999).
+  84:Core/Src/main.c **** uint32_t new_arr = new_period_ms - 1; // Replace 0 with your calculation.
   85:Core/Src/main.c **** 
-  86:Core/Src/main.c ****     while (1)
-  87:Core/Src/main.c ****     {
-  88:Core/Src/main.c ****         /* USER CODE BEGIN WHILE */
-  89:Core/Src/main.c ****         /* TODO: Check if the timer_event flag is set.
-  90:Core/Src/main.c ****                  If so, clear the flag and call the function to update the LED pattern. */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 3
+  86:Core/Src/main.c **** // TODO: Update the TIM16 ARR register directly.
+  87:Core/Src/main.c **** TIM16->ARR = new_arr;
+  88:Core/Src/main.c **** 
+  89:Core/Src/main.c **** // TODO: Reset the TIM16 CNT register to 0.
+  90:Core/Src/main.c **** TIM16->CNT = 0;
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 3
 
 
-  91:Core/Src/main.c ****         if(timer_event){
-  92:Core/Src/main.c ****           timer_event = 0;
-  93:Core/Src/main.c ****           update_led_pattern();
-  94:Core/Src/main.c ****         }
-  95:Core/Src/main.c ****         /* USER CODE END WHILE */
-  96:Core/Src/main.c ****     }
-  97:Core/Src/main.c **** }
-  98:Core/Src/main.c **** 
-  99:Core/Src/main.c **** /**
- 100:Core/Src/main.c ****   @brief System Clock Configuration (HSI 8 MHz)
- 101:Core/Src/main.c **** */
- 102:Core/Src/main.c **** void SystemClock_Config(void)
- 103:Core/Src/main.c **** {
- 104:Core/Src/main.c ****     LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
- 105:Core/Src/main.c ****     while(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0) {}
- 106:Core/Src/main.c ****     
- 107:Core/Src/main.c ****     LL_RCC_HSI_Enable();
- 108:Core/Src/main.c ****     while(LL_RCC_HSI_IsReady() != 1) {}
- 109:Core/Src/main.c ****     
- 110:Core/Src/main.c ****     LL_RCC_HSI_SetCalibTrimming(16);
- 111:Core/Src/main.c ****     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
- 112:Core/Src/main.c ****     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
- 113:Core/Src/main.c ****     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
- 114:Core/Src/main.c ****     while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI) {}
- 115:Core/Src/main.c ****     
- 116:Core/Src/main.c ****     LL_SetSystemCoreClock(8000000);
- 117:Core/Src/main.c ****     
- 118:Core/Src/main.c ****     if (HAL_InitTick(TICK_INT_PRIORITY) != HAL_OK) {
- 119:Core/Src/main.c ****         Error_Handler();
- 120:Core/Src/main.c ****     }
- 121:Core/Src/main.c **** }
- 122:Core/Src/main.c **** 
- 123:Core/Src/main.c **** /**
- 124:Core/Src/main.c ****   @brief TIM16 Initialization – Corrected for 1-second interrupt
- 125:Core/Src/main.c **** */
- 126:Core/Src/main.c **** static void MX_TIM16_Init(void)
- 127:Core/Src/main.c **** {
- 128:Core/Src/main.c ****     htim16.Instance = TIM16;
- 129:Core/Src/main.c ****     htim16.Init.Prescaler = 7999;     
- 130:Core/Src/main.c ****     htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
- 131:Core/Src/main.c ****     htim16.Init.Period = 999;          
- 132:Core/Src/main.c ****     htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
- 133:Core/Src/main.c ****     htim16.Init.RepetitionCounter = 0;
- 134:Core/Src/main.c ****     htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
- 135:Core/Src/main.c ****     
- 136:Core/Src/main.c ****     if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
- 137:Core/Src/main.c ****         Error_Handler();
- 138:Core/Src/main.c ****     }
- 139:Core/Src/main.c ****     
- 140:Core/Src/main.c ****     NVIC_EnableIRQ(TIM16_IRQn);
- 141:Core/Src/main.c **** }
- 142:Core/Src/main.c **** 
- 143:Core/Src/main.c **** /**
- 144:Core/Src/main.c ****   @brief GPIO Initialization – PB0..PB7 as outputs for LEDs
- 145:Core/Src/main.c **** */
- 146:Core/Src/main.c **** static void MX_GPIO_Init(void)
- 147:Core/Src/main.c **** {
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 4
+  91:Core/Src/main.c **** 
+  92:Core/Src/main.c **** 
+  93:Core/Src/main.c **** // Store the new ARR value for reference
+  94:Core/Src/main.c **** current_arr = new_arr;
+  95:Core/Src/main.c **** }
+  96:Core/Src/main.c **** 
+  97:Core/Src/main.c **** void handle_button_press(void)
+  98:Core/Src/main.c **** {
+  99:Core/Src/main.c **** // TODO: Get the current system tick using HAL_GetTick().
+ 100:Core/Src/main.c **** uint32_t current_time = HAL_GetTick();
+ 101:Core/Src/main.c **** 
+ 102:Core/Src/main.c **** // TODO: Check the time elapsed since the last valid press.
+ 103:Core/Src/main.c **** // Compare the elapsed time against DEBOUNCE_MS.
+ 104:Core/Src/main.c **** uint8_t debounce_passed = ((current_time - last_button_press_time) > DEBOUNCE_MS);
+ 105:Core/Src/main.c **** 
+ 106:Core/Src/main.c **** 
+ 107:Core/Src/main.c **** // TODO: Read the PA0 button state. The button is active low.
+ 108:Core/Src/main.c **** uint8_t button_pressed = (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == 0);
+ 109:Core/Src/main.c **** 
+ 110:Core/Src/main.c **** // TODO: If a valid debounced press occurs:
+ 111:Core/Src/main.c **** if(button_pressed && debounce_passed){
+ 112:Core/Src/main.c ****   // 1. Update last_button_press_time.
+ 113:Core/Src/main.c ****   last_button_press_time = current_time;
+ 114:Core/Src/main.c ****   // 2. Toggle speed_state between 0 and 1.
+ 115:Core/Src/main.c ****   speed_state = !speed_state;
+ 116:Core/Src/main.c ****   // 3. Call change_timer_period() with 500 or 1000.
+ 117:Core/Src/main.c ****   if(speed_state){
+ 118:Core/Src/main.c ****     change_timer_period(500);
+ 119:Core/Src/main.c ****   }
+ 120:Core/Src/main.c ****   else{
+ 121:Core/Src/main.c ****     change_timer_period(1000);
+ 122:Core/Src/main.c ****   }
+ 123:Core/Src/main.c **** }
+ 124:Core/Src/main.c **** }
+ 125:Core/Src/main.c **** /* USER CODE END 0 */
+ 126:Core/Src/main.c **** 
+ 127:Core/Src/main.c **** /**
+ 128:Core/Src/main.c **** 
+ 129:Core/Src/main.c **** @brief  The application entry point.
+ 130:Core/Src/main.c **** 
+ 131:Core/Src/main.c **** @retval int
+ 132:Core/Src/main.c **** */
+ 133:Core/Src/main.c **** int main(void)
+ 134:Core/Src/main.c **** {
+ 135:Core/Src/main.c **** HAL_Init();
+ 136:Core/Src/main.c **** SystemClock_Config();
+ 137:Core/Src/main.c **** 
+ 138:Core/Src/main.c **** MX_GPIO_Init();
+ 139:Core/Src/main.c **** MX_TIM16_Init();
+ 140:Core/Src/main.c **** 
+ 141:Core/Src/main.c **** /* USER CODE BEGIN 2 */
+ 142:Core/Src/main.c **** turn_off_all_leds();
+ 143:Core/Src/main.c **** 
+ 144:Core/Src/main.c **** // Start timer at 1-second period
+ 145:Core/Src/main.c **** change_timer_period(1000);
+ 146:Core/Src/main.c **** HAL_TIM_Base_Start_IT(&htim16);
+ 147:Core/Src/main.c **** /* USER CODE END 2 */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 4
 
 
-  26              		.loc 1 147 1 view -0
+ 148:Core/Src/main.c **** 
+ 149:Core/Src/main.c **** while (1)
+ 150:Core/Src/main.c **** {
+ 151:Core/Src/main.c **** /* USER CODE BEGIN WHILE */
+ 152:Core/Src/main.c **** // Handle button press (debounced)
+ 153:Core/Src/main.c **** handle_button_press();
+ 154:Core/Src/main.c **** 
+ 155:Core/Src/main.c **** // Handle timer event
+ 156:Core/Src/main.c **** if (timer_event) {
+ 157:Core/Src/main.c ****   timer_event = 0;
+ 158:Core/Src/main.c ****   update_led_pattern();
+ 159:Core/Src/main.c **** }
+ 160:Core/Src/main.c **** /* USER CODE END WHILE */
+ 161:Core/Src/main.c **** }
+ 162:Core/Src/main.c **** }
+ 163:Core/Src/main.c **** 
+ 164:Core/Src/main.c **** /**
+ 165:Core/Src/main.c **** 
+ 166:Core/Src/main.c **** @brief System Clock Configuration (HSI 8 MHz)
+ 167:Core/Src/main.c **** */
+ 168:Core/Src/main.c **** void SystemClock_Config(void)
+ 169:Core/Src/main.c **** {
+ 170:Core/Src/main.c **** LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
+ 171:Core/Src/main.c **** while(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0) {}
+ 172:Core/Src/main.c **** 
+ 173:Core/Src/main.c **** LL_RCC_HSI_Enable();
+ 174:Core/Src/main.c **** while(LL_RCC_HSI_IsReady() != 1) {}
+ 175:Core/Src/main.c **** 
+ 176:Core/Src/main.c **** LL_RCC_HSI_SetCalibTrimming(16);
+ 177:Core/Src/main.c **** LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+ 178:Core/Src/main.c **** LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+ 179:Core/Src/main.c **** LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
+ 180:Core/Src/main.c **** while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI) {}
+ 181:Core/Src/main.c **** 
+ 182:Core/Src/main.c **** LL_SetSystemCoreClock(8000000);
+ 183:Core/Src/main.c **** if (HAL_InitTick(TICK_INT_PRIORITY) != HAL_OK) {
+ 184:Core/Src/main.c **** Error_Handler();
+ 185:Core/Src/main.c **** }
+ 186:Core/Src/main.c **** }
+ 187:Core/Src/main.c **** 
+ 188:Core/Src/main.c **** /**
+ 189:Core/Src/main.c **** 
+ 190:Core/Src/main.c **** @brief TIM16 Initialization - Prescaler fixed at 7999
+ 191:Core/Src/main.c **** */
+ 192:Core/Src/main.c **** static void MX_TIM16_Init(void)
+ 193:Core/Src/main.c **** {
+ 194:Core/Src/main.c **** htim16.Instance = TIM16;
+ 195:Core/Src/main.c **** htim16.Init.Prescaler = 7999;
+ 196:Core/Src/main.c **** htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+ 197:Core/Src/main.c **** htim16.Init.Period = 999;
+ 198:Core/Src/main.c **** htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+ 199:Core/Src/main.c **** htim16.Init.RepetitionCounter = 0;
+ 200:Core/Src/main.c **** htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+ 201:Core/Src/main.c **** if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
+ 202:Core/Src/main.c **** Error_Handler();
+ 203:Core/Src/main.c **** }
+ 204:Core/Src/main.c **** NVIC_EnableIRQ(TIM16_IRQn);
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 5
+
+
+ 205:Core/Src/main.c **** }
+ 206:Core/Src/main.c **** 
+ 207:Core/Src/main.c **** /**
+ 208:Core/Src/main.c **** 
+ 209:Core/Src/main.c **** @brief GPIO Initialization - PB0..PB7 as outputs, PA0 as input with pull-up
+ 210:Core/Src/main.c **** */
+ 211:Core/Src/main.c **** static void MX_GPIO_Init(void)
+ 212:Core/Src/main.c **** {
+  26              		.loc 1 212 1 view -0
   27              		.cfi_startproc
-  28              		@ args = 0, pretend = 0, frame = 24
+  28              		@ args = 0, pretend = 0, frame = 32
   29              		@ frame_needed = 0, uses_anonymous_args = 0
   30 0000 10B5     		push	{r4, lr}
   31              		.cfi_def_cfa_offset 8
   32              		.cfi_offset 4, -8
   33              		.cfi_offset 14, -4
-  34 0002 86B0     		sub	sp, sp, #24
-  35              		.cfi_def_cfa_offset 32
- 148:Core/Src/main.c ****     __HAL_RCC_GPIOB_CLK_ENABLE();
-  36              		.loc 1 148 5 view .LVU1
+  34 0002 88B0     		sub	sp, sp, #32
+  35              		.cfi_def_cfa_offset 40
+ 213:Core/Src/main.c **** __HAL_RCC_GPIOA_CLK_ENABLE();
+  36              		.loc 1 213 1 view .LVU1
   37              	.LBB24:
-  38              		.loc 1 148 5 view .LVU2
-  39              		.loc 1 148 5 view .LVU3
-  40 0004 114B     		ldr	r3, .L4
+  38              		.loc 1 213 1 view .LVU2
+  39              		.loc 1 213 1 view .LVU3
+  40 0004 1B4B     		ldr	r3, .L4
   41 0006 5A69     		ldr	r2, [r3, #20]
   42 0008 8021     		movs	r1, #128
-  43 000a C902     		lsls	r1, r1, #11
+  43 000a 8902     		lsls	r1, r1, #10
   44 000c 0A43     		orrs	r2, r1
   45 000e 5A61     		str	r2, [r3, #20]
-  46              		.loc 1 148 5 view .LVU4
-  47 0010 5B69     		ldr	r3, [r3, #20]
-  48 0012 0B40     		ands	r3, r1
-  49 0014 0093     		str	r3, [sp]
-  50              		.loc 1 148 5 view .LVU5
-  51 0016 009B     		ldr	r3, [sp]
+  46              		.loc 1 213 1 view .LVU4
+  47 0010 5A69     		ldr	r2, [r3, #20]
+  48 0012 0A40     		ands	r2, r1
+  49 0014 0192     		str	r2, [sp, #4]
+  50              		.loc 1 213 1 view .LVU5
+  51 0016 019A     		ldr	r2, [sp, #4]
   52              	.LBE24:
-  53              		.loc 1 148 5 view .LVU6
- 149:Core/Src/main.c ****     GPIO_InitTypeDef GPIO_InitStruct = {0};
-  54              		.loc 1 149 5 view .LVU7
-  55              		.loc 1 149 22 is_stmt 0 view .LVU8
-  56 0018 01AC     		add	r4, sp, #4
-  57 001a 1422     		movs	r2, #20
-  58 001c 0021     		movs	r1, #0
-  59 001e 2000     		movs	r0, r4
-  60 0020 FFF7FEFF 		bl	memset
-  61              	.LVL0:
- 150:Core/Src/main.c ****     
- 151:Core/Src/main.c ****     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  62              		.loc 1 151 5 is_stmt 1 view .LVU9
-  63              		.loc 1 151 26 is_stmt 0 view .LVU10
-  64 0024 0123     		movs	r3, #1
-  65 0026 0293     		str	r3, [sp, #8]
- 152:Core/Src/main.c ****     GPIO_InitStruct.Pull = GPIO_NOPULL;
-  66              		.loc 1 152 5 is_stmt 1 view .LVU11
- 153:Core/Src/main.c ****     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  67              		.loc 1 153 5 view .LVU12
- 154:Core/Src/main.c ****     
- 155:Core/Src/main.c ****     // Configure all 8 pins (PB0 to PB7)
- 156:Core/Src/main.c ****     for (uint8_t i = 0; i < 8; i++) {
-  68              		.loc 1 156 5 view .LVU13
-  69              	.LBB25:
-  70              		.loc 1 156 10 view .LVU14
-  71              	.LVL1:
-  72              		.loc 1 156 18 is_stmt 0 view .LVU15
-  73 0028 0024     		movs	r4, #0
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 5
+  53              		.loc 1 213 1 view .LVU6
+ 214:Core/Src/main.c **** __HAL_RCC_GPIOB_CLK_ENABLE();
+  54              		.loc 1 214 1 view .LVU7
+  55              	.LBB25:
+  56              		.loc 1 214 1 view .LVU8
+  57              		.loc 1 214 1 view .LVU9
+  58 0018 5A69     		ldr	r2, [r3, #20]
+  59 001a 8021     		movs	r1, #128
+  60 001c C902     		lsls	r1, r1, #11
+  61 001e 0A43     		orrs	r2, r1
+  62 0020 5A61     		str	r2, [r3, #20]
+  63              		.loc 1 214 1 view .LVU10
+  64 0022 5B69     		ldr	r3, [r3, #20]
+  65 0024 0B40     		ands	r3, r1
+  66 0026 0293     		str	r3, [sp, #8]
+  67              		.loc 1 214 1 view .LVU11
+  68 0028 029B     		ldr	r3, [sp, #8]
+  69              	.LBE25:
+  70              		.loc 1 214 1 view .LVU12
+ 215:Core/Src/main.c **** 
+ 216:Core/Src/main.c **** GPIO_InitTypeDef GPIO_InitStruct = {0};
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 6
 
 
-  74              		.loc 1 156 5 view .LVU16
-  75 002a 0BE0     		b	.L2
-  76              	.LVL2:
-  77              	.L3:
- 157:Core/Src/main.c ****         GPIO_InitStruct.Pin = led_pins[i];
-  78              		.loc 1 157 9 is_stmt 1 view .LVU17
-  79              		.loc 1 157 39 is_stmt 0 view .LVU18
-  80 002c 084B     		ldr	r3, .L4+4
-  81 002e 6200     		lsls	r2, r4, #1
-  82 0030 D35A     		ldrh	r3, [r2, r3]
-  83              		.loc 1 157 29 view .LVU19
-  84 0032 0193     		str	r3, [sp, #4]
- 158:Core/Src/main.c ****         HAL_GPIO_Init(led_ports[i], &GPIO_InitStruct);
-  85              		.loc 1 158 9 is_stmt 1 view .LVU20
-  86 0034 074B     		ldr	r3, .L4+8
-  87 0036 A200     		lsls	r2, r4, #2
-  88 0038 D058     		ldr	r0, [r2, r3]
-  89 003a 01A9     		add	r1, sp, #4
-  90 003c FFF7FEFF 		bl	HAL_GPIO_Init
-  91              	.LVL3:
- 156:Core/Src/main.c ****         GPIO_InitStruct.Pin = led_pins[i];
-  92              		.loc 1 156 33 discriminator 3 view .LVU21
-  93 0040 0134     		adds	r4, r4, #1
-  94              	.LVL4:
- 156:Core/Src/main.c ****         GPIO_InitStruct.Pin = led_pins[i];
-  95              		.loc 1 156 33 is_stmt 0 discriminator 3 view .LVU22
-  96 0042 E4B2     		uxtb	r4, r4
-  97              	.LVL5:
-  98              	.L2:
- 156:Core/Src/main.c ****         GPIO_InitStruct.Pin = led_pins[i];
-  99              		.loc 1 156 27 is_stmt 1 discriminator 1 view .LVU23
- 100 0044 072C     		cmp	r4, #7
- 101 0046 F1D9     		bls	.L3
- 102              	.LBE25:
- 159:Core/Src/main.c ****     }
- 160:Core/Src/main.c **** }
- 103              		.loc 1 160 1 is_stmt 0 view .LVU24
- 104 0048 06B0     		add	sp, sp, #24
- 105              		@ sp needed
- 106              	.LVL6:
- 107              		.loc 1 160 1 view .LVU25
- 108 004a 10BD     		pop	{r4, pc}
- 109              	.L5:
- 110              		.align	2
- 111              	.L4:
- 112 004c 00100240 		.word	1073876992
- 113 0050 00000000 		.word	led_pins
- 114 0054 00000000 		.word	led_ports
- 115              		.cfi_endproc
- 116              	.LFE348:
- 118              		.section	.text.turn_off_all_leds,"ax",%progbits
- 119              		.align	1
- 120              		.global	turn_off_all_leds
- 121              		.syntax unified
- 122              		.code	16
- 123              		.thumb_func
- 125              	turn_off_all_leds:
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 6
+  71              		.loc 1 216 1 view .LVU13
+  72              		.loc 1 216 18 is_stmt 0 view .LVU14
+  73 002a 03AC     		add	r4, sp, #12
+  74 002c 1422     		movs	r2, #20
+  75 002e 0021     		movs	r1, #0
+  76 0030 2000     		movs	r0, r4
+  77 0032 FFF7FEFF 		bl	memset
+  78              	.LVL0:
+ 217:Core/Src/main.c **** 
+ 218:Core/Src/main.c **** // Configure LEDs (PB0..PB7) as outputs
+ 219:Core/Src/main.c **** GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  79              		.loc 1 219 1 is_stmt 1 view .LVU15
+  80              		.loc 1 219 22 is_stmt 0 view .LVU16
+  81 0036 0123     		movs	r3, #1
+  82 0038 0493     		str	r3, [sp, #16]
+ 220:Core/Src/main.c **** GPIO_InitStruct.Pull = GPIO_NOPULL;
+  83              		.loc 1 220 1 is_stmt 1 view .LVU17
+ 221:Core/Src/main.c **** GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  84              		.loc 1 221 1 view .LVU18
+ 222:Core/Src/main.c **** 
+ 223:Core/Src/main.c **** for (uint8_t i = 0; i < 8; i++) {
+  85              		.loc 1 223 1 view .LVU19
+  86              	.LBB26:
+  87              		.loc 1 223 6 view .LVU20
+  88              	.LVL1:
+  89              		.loc 1 223 14 is_stmt 0 view .LVU21
+  90 003a 0024     		movs	r4, #0
+  91              		.loc 1 223 1 view .LVU22
+  92 003c 0BE0     		b	.L2
+  93              	.LVL2:
+  94              	.L3:
+ 224:Core/Src/main.c **** GPIO_InitStruct.Pin = led_pins[i];
+  95              		.loc 1 224 1 is_stmt 1 view .LVU23
+  96              		.loc 1 224 31 is_stmt 0 view .LVU24
+  97 003e 0E4B     		ldr	r3, .L4+4
+  98 0040 6200     		lsls	r2, r4, #1
+  99 0042 D35A     		ldrh	r3, [r2, r3]
+ 100              		.loc 1 224 21 view .LVU25
+ 101 0044 0393     		str	r3, [sp, #12]
+ 225:Core/Src/main.c **** HAL_GPIO_Init(led_ports[i], &GPIO_InitStruct);
+ 102              		.loc 1 225 1 is_stmt 1 view .LVU26
+ 103 0046 0D4B     		ldr	r3, .L4+8
+ 104 0048 A200     		lsls	r2, r4, #2
+ 105 004a D058     		ldr	r0, [r2, r3]
+ 106 004c 03A9     		add	r1, sp, #12
+ 107 004e FFF7FEFF 		bl	HAL_GPIO_Init
+ 108              	.LVL3:
+ 223:Core/Src/main.c **** GPIO_InitStruct.Pin = led_pins[i];
+ 109              		.loc 1 223 29 discriminator 3 view .LVU27
+ 110 0052 0134     		adds	r4, r4, #1
+ 111              	.LVL4:
+ 223:Core/Src/main.c **** GPIO_InitStruct.Pin = led_pins[i];
+ 112              		.loc 1 223 29 is_stmt 0 discriminator 3 view .LVU28
+ 113 0054 E4B2     		uxtb	r4, r4
+ 114              	.LVL5:
+ 115              	.L2:
+ 223:Core/Src/main.c **** GPIO_InitStruct.Pin = led_pins[i];
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 7
 
 
- 126              	.LFB343:
-  36:Core/Src/main.c ****     /* TODO: Iterate through the LED arrays and turn off all LEDs */
- 127              		.loc 1 36 1 is_stmt 1 view -0
- 128              		.cfi_startproc
- 129              		@ args = 0, pretend = 0, frame = 0
- 130              		@ frame_needed = 0, uses_anonymous_args = 0
- 131 0000 10B5     		push	{r4, lr}
- 132              		.cfi_def_cfa_offset 8
- 133              		.cfi_offset 4, -8
- 134              		.cfi_offset 14, -4
-  38:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
- 135              		.loc 1 38 5 view .LVU27
- 136              	.LBB26:
-  38:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
- 137              		.loc 1 38 9 view .LVU28
- 138              	.LVL7:
-  38:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
- 139              		.loc 1 38 17 is_stmt 0 view .LVU29
- 140 0002 0024     		movs	r4, #0
-  38:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
- 141              		.loc 1 38 5 view .LVU30
- 142 0004 08E0     		b	.L7
- 143              	.LVL8:
- 144              	.L8:
-  39:Core/Src/main.c ****     }
- 145              		.loc 1 39 7 is_stmt 1 view .LVU31
- 146 0006 064B     		ldr	r3, .L9
- 147 0008 6200     		lsls	r2, r4, #1
- 148 000a D15A     		ldrh	r1, [r2, r3]
- 149 000c 0022     		movs	r2, #0
- 150 000e 0548     		ldr	r0, .L9+4
- 151 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
- 152              	.LVL9:
-  38:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
- 153              		.loc 1 38 32 discriminator 3 view .LVU32
- 154 0014 0134     		adds	r4, r4, #1
- 155              	.LVL10:
-  38:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
- 156              		.loc 1 38 32 is_stmt 0 discriminator 3 view .LVU33
- 157 0016 E4B2     		uxtb	r4, r4
- 158              	.LVL11:
- 159              	.L7:
-  38:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
- 160              		.loc 1 38 26 is_stmt 1 discriminator 1 view .LVU34
- 161 0018 072C     		cmp	r4, #7
- 162 001a F4D9     		bls	.L8
- 163              	.LBE26:
-  42:Core/Src/main.c **** 
- 164              		.loc 1 42 1 is_stmt 0 view .LVU35
- 165              		@ sp needed
- 166              	.LVL12:
-  42:Core/Src/main.c **** 
- 167              		.loc 1 42 1 view .LVU36
- 168 001c 10BD     		pop	{r4, pc}
- 169              	.L10:
- 170 001e C046     		.align	2
- 171              	.L9:
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 7
+ 116              		.loc 1 223 23 is_stmt 1 discriminator 1 view .LVU29
+ 117 0056 072C     		cmp	r4, #7
+ 118 0058 F1D9     		bls	.L3
+ 119              	.LBE26:
+ 226:Core/Src/main.c **** }
+ 227:Core/Src/main.c **** 
+ 228:Core/Src/main.c **** // Configure PA0 as input with pull-up (button active low)
+ 229:Core/Src/main.c **** GPIO_InitStruct.Pin = GPIO_PIN_0;
+ 120              		.loc 1 229 1 view .LVU30
+ 121              		.loc 1 229 21 is_stmt 0 view .LVU31
+ 122 005a 03A9     		add	r1, sp, #12
+ 123 005c 0123     		movs	r3, #1
+ 124 005e 0393     		str	r3, [sp, #12]
+ 230:Core/Src/main.c **** GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+ 125              		.loc 1 230 1 is_stmt 1 view .LVU32
+ 126              		.loc 1 230 22 is_stmt 0 view .LVU33
+ 127 0060 0022     		movs	r2, #0
+ 128 0062 4A60     		str	r2, [r1, #4]
+ 231:Core/Src/main.c **** GPIO_InitStruct.Pull = GPIO_PULLUP;
+ 129              		.loc 1 231 1 is_stmt 1 view .LVU34
+ 130              		.loc 1 231 22 is_stmt 0 view .LVU35
+ 131 0064 8B60     		str	r3, [r1, #8]
+ 232:Core/Src/main.c **** HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+ 132              		.loc 1 232 1 is_stmt 1 view .LVU36
+ 133 0066 9020     		movs	r0, #144
+ 134 0068 C005     		lsls	r0, r0, #23
+ 135 006a FFF7FEFF 		bl	HAL_GPIO_Init
+ 136              	.LVL6:
+ 233:Core/Src/main.c **** }
+ 137              		.loc 1 233 1 is_stmt 0 view .LVU37
+ 138 006e 08B0     		add	sp, sp, #32
+ 139              		@ sp needed
+ 140              	.LVL7:
+ 141              		.loc 1 233 1 view .LVU38
+ 142 0070 10BD     		pop	{r4, pc}
+ 143              	.L5:
+ 144 0072 C046     		.align	2
+ 145              	.L4:
+ 146 0074 00100240 		.word	1073876992
+ 147 0078 00000000 		.word	led_pins
+ 148 007c 00000000 		.word	led_ports
+ 149              		.cfi_endproc
+ 150              	.LFE350:
+ 152              		.section	.text.turn_off_all_leds,"ax",%progbits
+ 153              		.align	1
+ 154              		.global	turn_off_all_leds
+ 155              		.syntax unified
+ 156              		.code	16
+ 157              		.thumb_func
+ 159              	turn_off_all_leds:
+ 160              	.LFB343:
+  53:Core/Src/main.c **** // TODO: Iterate through the LED array. Set all pins to GPIO_PIN_RESET.
+ 161              		.loc 1 53 1 is_stmt 1 view -0
+ 162              		.cfi_startproc
+ 163              		@ args = 0, pretend = 0, frame = 0
+ 164              		@ frame_needed = 0, uses_anonymous_args = 0
+ 165 0000 10B5     		push	{r4, lr}
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 8
 
 
- 172 0020 00000000 		.word	led_pins
- 173 0024 00040048 		.word	1207960576
- 174              		.cfi_endproc
- 175              	.LFE343:
- 177              		.section	.text.update_led_pattern,"ax",%progbits
- 178              		.align	1
- 179              		.global	update_led_pattern
- 180              		.syntax unified
- 181              		.code	16
- 182              		.thumb_func
- 184              	update_led_pattern:
- 185              	.LFB344:
-  45:Core/Src/main.c ****     /* TODO: Implement the running light pattern logic */
- 186              		.loc 1 45 1 is_stmt 1 view -0
- 187              		.cfi_startproc
- 188              		@ args = 0, pretend = 0, frame = 0
- 189              		@ frame_needed = 0, uses_anonymous_args = 0
- 190 0000 10B5     		push	{r4, lr}
- 191              		.cfi_def_cfa_offset 8
- 192              		.cfi_offset 4, -8
- 193              		.cfi_offset 14, -4
-  48:Core/Src/main.c **** 
- 194              		.loc 1 48 5 view .LVU38
- 195 0002 FFF7FEFF 		bl	turn_off_all_leds
- 196              	.LVL13:
-  51:Core/Src/main.c **** 
- 197              		.loc 1 51 5 view .LVU39
- 198 0006 0F4C     		ldr	r4, .L15
- 199 0008 2278     		ldrb	r2, [r4]
- 200 000a 0F4B     		ldr	r3, .L15+4
- 201 000c 5200     		lsls	r2, r2, #1
- 202 000e D15A     		ldrh	r1, [r2, r3]
- 203 0010 0122     		movs	r2, #1
- 204 0012 0E48     		ldr	r0, .L15+8
- 205 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
- 206              	.LVL14:
-  54:Core/Src/main.c **** 
- 207              		.loc 1 54 5 view .LVU40
- 208 0018 0D4B     		ldr	r3, .L15+12
- 209 001a 1A78     		ldrb	r2, [r3]
- 210 001c 52B2     		sxtb	r2, r2
-  54:Core/Src/main.c **** 
- 211              		.loc 1 54 17 is_stmt 0 view .LVU41
- 212 001e 2378     		ldrb	r3, [r4]
- 213 0020 9B18     		adds	r3, r3, r2
- 214 0022 DBB2     		uxtb	r3, r3
- 215 0024 2370     		strb	r3, [r4]
-  57:Core/Src/main.c ****       direction = -1;
- 216              		.loc 1 57 5 is_stmt 1 view .LVU42
-  57:Core/Src/main.c ****       direction = -1;
- 217              		.loc 1 57 20 is_stmt 0 view .LVU43
- 218 0026 2378     		ldrb	r3, [r4]
-  57:Core/Src/main.c ****       direction = -1;
- 219              		.loc 1 57 7 view .LVU44
- 220 0028 072B     		cmp	r3, #7
- 221 002a 07D0     		beq	.L14
-  60:Core/Src/main.c ****       direction = 1;
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 8
+ 166              		.cfi_def_cfa_offset 8
+ 167              		.cfi_offset 4, -8
+ 168              		.cfi_offset 14, -4
+  55:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+ 169              		.loc 1 55 3 view .LVU40
+ 170              	.LBB27:
+  55:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+ 171              		.loc 1 55 7 view .LVU41
+ 172              	.LVL8:
+  55:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+ 173              		.loc 1 55 15 is_stmt 0 view .LVU42
+ 174 0002 0024     		movs	r4, #0
+  55:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+ 175              		.loc 1 55 3 view .LVU43
+ 176 0004 08E0     		b	.L7
+ 177              	.LVL9:
+ 178              	.L8:
+  56:Core/Src/main.c ****   }
+ 179              		.loc 1 56 7 is_stmt 1 view .LVU44
+ 180 0006 064B     		ldr	r3, .L9
+ 181 0008 6200     		lsls	r2, r4, #1
+ 182 000a D15A     		ldrh	r1, [r2, r3]
+ 183 000c 0022     		movs	r2, #0
+ 184 000e 0548     		ldr	r0, .L9+4
+ 185 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 186              	.LVL10:
+  55:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+ 187              		.loc 1 55 30 discriminator 3 view .LVU45
+ 188 0014 0134     		adds	r4, r4, #1
+ 189              	.LVL11:
+  55:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+ 190              		.loc 1 55 30 is_stmt 0 discriminator 3 view .LVU46
+ 191 0016 E4B2     		uxtb	r4, r4
+ 192              	.LVL12:
+ 193              	.L7:
+  55:Core/Src/main.c ****       HAL_GPIO_WritePin(GPIOB, led_pins[i], GPIO_PIN_RESET);
+ 194              		.loc 1 55 24 is_stmt 1 discriminator 1 view .LVU47
+ 195 0018 072C     		cmp	r4, #7
+ 196 001a F4D9     		bls	.L8
+ 197              	.LBE27:
+  58:Core/Src/main.c **** 
+ 198              		.loc 1 58 1 is_stmt 0 view .LVU48
+ 199              		@ sp needed
+ 200              	.LVL13:
+  58:Core/Src/main.c **** 
+ 201              		.loc 1 58 1 view .LVU49
+ 202 001c 10BD     		pop	{r4, pc}
+ 203              	.L10:
+ 204 001e C046     		.align	2
+ 205              	.L9:
+ 206 0020 00000000 		.word	led_pins
+ 207 0024 00040048 		.word	1207960576
+ 208              		.cfi_endproc
+ 209              	.LFE343:
+ 211              		.section	.text.update_led_pattern,"ax",%progbits
+ 212              		.align	1
+ 213              		.global	update_led_pattern
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 9
 
 
- 222              		.loc 1 60 10 is_stmt 1 view .LVU45
-  60:Core/Src/main.c ****       direction = 1;
- 223              		.loc 1 60 25 is_stmt 0 view .LVU46
- 224 002c 054B     		ldr	r3, .L15
- 225 002e 1B78     		ldrb	r3, [r3]
-  60:Core/Src/main.c ****       direction = 1;
- 226              		.loc 1 60 12 view .LVU47
- 227 0030 002B     		cmp	r3, #0
- 228 0032 06D1     		bne	.L11
-  61:Core/Src/main.c ****     }
- 229              		.loc 1 61 7 is_stmt 1 view .LVU48
-  61:Core/Src/main.c ****     }
- 230              		.loc 1 61 17 is_stmt 0 view .LVU49
- 231 0034 064B     		ldr	r3, .L15+12
- 232 0036 0122     		movs	r2, #1
- 233 0038 1A70     		strb	r2, [r3]
-  64:Core/Src/main.c **** /* USER CODE END 0 */
- 234              		.loc 1 64 1 view .LVU50
- 235 003a 02E0     		b	.L11
- 236              	.L14:
-  58:Core/Src/main.c ****     }
- 237              		.loc 1 58 7 is_stmt 1 view .LVU51
-  58:Core/Src/main.c ****     }
- 238              		.loc 1 58 17 is_stmt 0 view .LVU52
- 239 003c 044B     		ldr	r3, .L15+12
- 240 003e FF22     		movs	r2, #255
- 241 0040 1A70     		strb	r2, [r3]
- 242              	.L11:
-  64:Core/Src/main.c **** /* USER CODE END 0 */
- 243              		.loc 1 64 1 view .LVU53
- 244              		@ sp needed
- 245 0042 10BD     		pop	{r4, pc}
- 246              	.L16:
- 247              		.align	2
- 248              	.L15:
- 249 0044 00000000 		.word	current_led
- 250 0048 00000000 		.word	led_pins
- 251 004c 00040048 		.word	1207960576
- 252 0050 00000000 		.word	direction
- 253              		.cfi_endproc
- 254              	.LFE344:
- 256              		.section	.text.TIM16_IRQHandler,"ax",%progbits
- 257              		.align	1
- 258              		.global	TIM16_IRQHandler
- 259              		.syntax unified
- 260              		.code	16
- 261              		.thumb_func
- 263              	TIM16_IRQHandler:
- 264              	.LFB349:
- 161:Core/Src/main.c **** 
- 162:Core/Src/main.c **** /**
- 163:Core/Src/main.c ****   @brief TIM16 interrupt handler
- 164:Core/Src/main.c **** */
- 165:Core/Src/main.c **** void TIM16_IRQHandler(void)
- 166:Core/Src/main.c **** {
- 265              		.loc 1 166 1 is_stmt 1 view -0
- 266              		.cfi_startproc
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 9
+ 214              		.syntax unified
+ 215              		.code	16
+ 216              		.thumb_func
+ 218              	update_led_pattern:
+ 219              	.LFB344:
+  61:Core/Src/main.c **** // TODO: Turn off all LEDs.
+ 220              		.loc 1 61 1 is_stmt 1 view -0
+ 221              		.cfi_startproc
+ 222              		@ args = 0, pretend = 0, frame = 0
+ 223              		@ frame_needed = 0, uses_anonymous_args = 0
+ 224 0000 10B5     		push	{r4, lr}
+ 225              		.cfi_def_cfa_offset 8
+ 226              		.cfi_offset 4, -8
+ 227              		.cfi_offset 14, -4
+  63:Core/Src/main.c **** 
+ 228              		.loc 1 63 1 view .LVU51
+ 229 0002 FFF7FEFF 		bl	turn_off_all_leds
+ 230              	.LVL14:
+  66:Core/Src/main.c **** 
+ 231              		.loc 1 66 1 view .LVU52
+ 232 0006 0F4C     		ldr	r4, .L15
+ 233 0008 2278     		ldrb	r2, [r4]
+ 234 000a 0F4B     		ldr	r3, .L15+4
+ 235 000c 5200     		lsls	r2, r2, #1
+ 236 000e D15A     		ldrh	r1, [r2, r3]
+ 237 0010 0122     		movs	r2, #1
+ 238 0012 0E48     		ldr	r0, .L15+8
+ 239 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 240              	.LVL15:
+  69:Core/Src/main.c **** 
+ 241              		.loc 1 69 1 view .LVU53
+ 242 0018 0D4B     		ldr	r3, .L15+12
+ 243 001a 1A78     		ldrb	r2, [r3]
+ 244 001c 52B2     		sxtb	r2, r2
+  69:Core/Src/main.c **** 
+ 245              		.loc 1 69 13 is_stmt 0 view .LVU54
+ 246 001e 2378     		ldrb	r3, [r4]
+ 247 0020 9B18     		adds	r3, r3, r2
+ 248 0022 DBB2     		uxtb	r3, r3
+ 249 0024 2370     		strb	r3, [r4]
+  72:Core/Src/main.c ****       direction = -1;
+ 250              		.loc 1 72 1 is_stmt 1 view .LVU55
+  72:Core/Src/main.c ****       direction = -1;
+ 251              		.loc 1 72 16 is_stmt 0 view .LVU56
+ 252 0026 2378     		ldrb	r3, [r4]
+  72:Core/Src/main.c ****       direction = -1;
+ 253              		.loc 1 72 3 view .LVU57
+ 254 0028 072B     		cmp	r3, #7
+ 255 002a 07D0     		beq	.L14
+  75:Core/Src/main.c ****       direction = 1;
+ 256              		.loc 1 75 10 is_stmt 1 view .LVU58
+  75:Core/Src/main.c ****       direction = 1;
+ 257              		.loc 1 75 25 is_stmt 0 view .LVU59
+ 258 002c 054B     		ldr	r3, .L15
+ 259 002e 1B78     		ldrb	r3, [r3]
+  75:Core/Src/main.c ****       direction = 1;
+ 260              		.loc 1 75 12 view .LVU60
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 10
 
 
- 267              		@ args = 0, pretend = 0, frame = 0
- 268              		@ frame_needed = 0, uses_anonymous_args = 0
- 269 0000 10B5     		push	{r4, lr}
- 270              		.cfi_def_cfa_offset 8
- 271              		.cfi_offset 4, -8
- 272              		.cfi_offset 14, -4
- 167:Core/Src/main.c ****     HAL_TIM_IRQHandler(&htim16);   // Clears the update flag
- 273              		.loc 1 167 5 view .LVU55
- 274 0002 0348     		ldr	r0, .L18
- 275 0004 FFF7FEFF 		bl	HAL_TIM_IRQHandler
- 276              	.LVL15:
- 168:Core/Src/main.c ****     /* TODO: Set the global timer_event flag to signal the main loop */
- 169:Core/Src/main.c ****     timer_event = 1;
- 277              		.loc 1 169 5 view .LVU56
- 278              		.loc 1 169 17 is_stmt 0 view .LVU57
- 279 0008 024B     		ldr	r3, .L18+4
- 280 000a 0122     		movs	r2, #1
- 281 000c 1A70     		strb	r2, [r3]
- 170:Core/Src/main.c ****     
- 171:Core/Src/main.c **** }
- 282              		.loc 1 171 1 view .LVU58
- 283              		@ sp needed
- 284 000e 10BD     		pop	{r4, pc}
- 285              	.L19:
- 286              		.align	2
- 287              	.L18:
- 288 0010 00000000 		.word	htim16
- 289 0014 00000000 		.word	timer_event
- 290              		.cfi_endproc
- 291              	.LFE349:
- 293              		.section	.text.Error_Handler,"ax",%progbits
- 294              		.align	1
- 295              		.global	Error_Handler
- 296              		.syntax unified
- 297              		.code	16
- 298              		.thumb_func
- 300              	Error_Handler:
- 301              	.LFB350:
- 172:Core/Src/main.c **** 
- 173:Core/Src/main.c **** /**
- 174:Core/Src/main.c ****   @brief Error handler
- 175:Core/Src/main.c **** */
- 176:Core/Src/main.c **** void Error_Handler(void)
- 177:Core/Src/main.c **** {
- 302              		.loc 1 177 1 is_stmt 1 view -0
- 303              		.cfi_startproc
- 304              		@ Volatile: function does not return.
- 305              		@ args = 0, pretend = 0, frame = 0
- 306              		@ frame_needed = 0, uses_anonymous_args = 0
- 307              		@ link register save eliminated.
- 178:Core/Src/main.c ****     __disable_irq();
- 308              		.loc 1 178 5 view .LVU60
- 309              	.LBB27:
- 310              	.LBI27:
- 311              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
+ 261 0030 002B     		cmp	r3, #0
+ 262 0032 06D1     		bne	.L11
+  76:Core/Src/main.c ****     }
+ 263              		.loc 1 76 7 is_stmt 1 view .LVU61
+  76:Core/Src/main.c ****     }
+ 264              		.loc 1 76 17 is_stmt 0 view .LVU62
+ 265 0034 064B     		ldr	r3, .L15+12
+ 266 0036 0122     		movs	r2, #1
+ 267 0038 1A70     		strb	r2, [r3]
+  78:Core/Src/main.c **** 
+ 268              		.loc 1 78 1 view .LVU63
+ 269 003a 02E0     		b	.L11
+ 270              	.L14:
+  73:Core/Src/main.c ****     }
+ 271              		.loc 1 73 7 is_stmt 1 view .LVU64
+  73:Core/Src/main.c ****     }
+ 272              		.loc 1 73 17 is_stmt 0 view .LVU65
+ 273 003c 044B     		ldr	r3, .L15+12
+ 274 003e FF22     		movs	r2, #255
+ 275 0040 1A70     		strb	r2, [r3]
+ 276              	.L11:
+  78:Core/Src/main.c **** 
+ 277              		.loc 1 78 1 view .LVU66
+ 278              		@ sp needed
+ 279 0042 10BD     		pop	{r4, pc}
+ 280              	.L16:
+ 281              		.align	2
+ 282              	.L15:
+ 283 0044 00000000 		.word	current_led
+ 284 0048 00000000 		.word	led_pins
+ 285 004c 00040048 		.word	1207960576
+ 286 0050 00000000 		.word	direction
+ 287              		.cfi_endproc
+ 288              	.LFE344:
+ 290              		.section	.text.change_timer_period,"ax",%progbits
+ 291              		.align	1
+ 292              		.global	change_timer_period
+ 293              		.syntax unified
+ 294              		.code	16
+ 295              		.thumb_func
+ 297              	change_timer_period:
+ 298              	.LVL16:
+ 299              	.LFB345:
+  81:Core/Src/main.c **** // TODO: Calculate the new ARR value using your formula.
+ 300              		.loc 1 81 1 is_stmt 1 view -0
+ 301              		.cfi_startproc
+ 302              		@ args = 0, pretend = 0, frame = 0
+ 303              		@ frame_needed = 0, uses_anonymous_args = 0
+ 304              		@ link register save eliminated.
+  84:Core/Src/main.c **** 
+ 305              		.loc 1 84 1 view .LVU68
+  84:Core/Src/main.c **** 
+ 306              		.loc 1 84 10 is_stmt 0 view .LVU69
+ 307 0000 0138     		subs	r0, r0, #1
+ 308              	.LVL17:
+  87:Core/Src/main.c **** 
+ 309              		.loc 1 87 1 is_stmt 1 view .LVU70
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 11
+
+
+  87:Core/Src/main.c **** 
+ 310              		.loc 1 87 12 is_stmt 0 view .LVU71
+ 311 0002 034B     		ldr	r3, .L18
+ 312 0004 D862     		str	r0, [r3, #44]
+  90:Core/Src/main.c **** 
+ 313              		.loc 1 90 1 is_stmt 1 view .LVU72
+  90:Core/Src/main.c **** 
+ 314              		.loc 1 90 12 is_stmt 0 view .LVU73
+ 315 0006 0022     		movs	r2, #0
+ 316 0008 5A62     		str	r2, [r3, #36]
+  94:Core/Src/main.c **** }
+ 317              		.loc 1 94 1 is_stmt 1 view .LVU74
+  94:Core/Src/main.c **** }
+ 318              		.loc 1 94 13 is_stmt 0 view .LVU75
+ 319 000a 024B     		ldr	r3, .L18+4
+ 320 000c 1860     		str	r0, [r3]
+  95:Core/Src/main.c **** 
+ 321              		.loc 1 95 1 view .LVU76
+ 322              		@ sp needed
+ 323 000e 7047     		bx	lr
+ 324              	.L19:
+ 325              		.align	2
+ 326              	.L18:
+ 327 0010 00440140 		.word	1073824768
+ 328 0014 00000000 		.word	current_arr
+ 329              		.cfi_endproc
+ 330              	.LFE345:
+ 332              		.section	.text.handle_button_press,"ax",%progbits
+ 333              		.align	1
+ 334              		.global	handle_button_press
+ 335              		.syntax unified
+ 336              		.code	16
+ 337              		.thumb_func
+ 339              	handle_button_press:
+ 340              	.LFB346:
+  98:Core/Src/main.c **** // TODO: Get the current system tick using HAL_GetTick().
+ 341              		.loc 1 98 1 is_stmt 1 view -0
+ 342              		.cfi_startproc
+ 343              		@ args = 0, pretend = 0, frame = 0
+ 344              		@ frame_needed = 0, uses_anonymous_args = 0
+ 345 0000 70B5     		push	{r4, r5, r6, lr}
+ 346              		.cfi_def_cfa_offset 16
+ 347              		.cfi_offset 4, -16
+ 348              		.cfi_offset 5, -12
+ 349              		.cfi_offset 6, -8
+ 350              		.cfi_offset 14, -4
+ 100:Core/Src/main.c **** 
+ 351              		.loc 1 100 1 view .LVU78
+ 100:Core/Src/main.c **** 
+ 352              		.loc 1 100 25 is_stmt 0 view .LVU79
+ 353 0002 FFF7FEFF 		bl	HAL_GetTick
+ 354              	.LVL18:
+ 355 0006 0400     		movs	r4, r0
+ 356              	.LVL19:
+ 104:Core/Src/main.c **** 
+ 357              		.loc 1 104 1 is_stmt 1 view .LVU80
+ 104:Core/Src/main.c **** 
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 12
+
+
+ 358              		.loc 1 104 42 is_stmt 0 view .LVU81
+ 359 0008 0F4B     		ldr	r3, .L23
+ 360 000a 1B68     		ldr	r3, [r3]
+ 361 000c C51A     		subs	r5, r0, r3
+ 362              	.LVL20:
+ 108:Core/Src/main.c **** 
+ 363              		.loc 1 108 1 is_stmt 1 view .LVU82
+ 108:Core/Src/main.c **** 
+ 364              		.loc 1 108 27 is_stmt 0 view .LVU83
+ 365 000e 9020     		movs	r0, #144
+ 366              	.LVL21:
+ 108:Core/Src/main.c **** 
+ 367              		.loc 1 108 27 view .LVU84
+ 368 0010 0121     		movs	r1, #1
+ 369 0012 C005     		lsls	r0, r0, #23
+ 370 0014 FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 371              	.LVL22:
+ 111:Core/Src/main.c ****   // 1. Update last_button_press_time.
+ 372              		.loc 1 111 1 is_stmt 1 view .LVU85
+ 111:Core/Src/main.c ****   // 1. Update last_button_press_time.
+ 373              		.loc 1 111 3 is_stmt 0 view .LVU86
+ 374 0018 0028     		cmp	r0, #0
+ 375 001a 0FD1     		bne	.L20
+ 111:Core/Src/main.c ****   // 1. Update last_button_press_time.
+ 376              		.loc 1 111 19 discriminator 1 view .LVU87
+ 377 001c 192D     		cmp	r5, #25
+ 378 001e 0DD9     		bls	.L20
+ 113:Core/Src/main.c ****   // 2. Toggle speed_state between 0 and 1.
+ 379              		.loc 1 113 3 is_stmt 1 view .LVU88
+ 113:Core/Src/main.c ****   // 2. Toggle speed_state between 0 and 1.
+ 380              		.loc 1 113 26 is_stmt 0 view .LVU89
+ 381 0020 094B     		ldr	r3, .L23
+ 382 0022 1C60     		str	r4, [r3]
+ 115:Core/Src/main.c ****   // 3. Call change_timer_period() with 500 or 1000.
+ 383              		.loc 1 115 3 is_stmt 1 view .LVU90
+ 115:Core/Src/main.c ****   // 3. Call change_timer_period() with 500 or 1000.
+ 384              		.loc 1 115 17 is_stmt 0 view .LVU91
+ 385 0024 094A     		ldr	r2, .L23+4
+ 386 0026 1378     		ldrb	r3, [r2]
+ 387 0028 5942     		rsbs	r1, r3, #0
+ 388 002a 4B41     		adcs	r3, r3, r1
+ 389 002c DBB2     		uxtb	r3, r3
+ 115:Core/Src/main.c ****   // 3. Call change_timer_period() with 500 or 1000.
+ 390              		.loc 1 115 15 view .LVU92
+ 391 002e 1370     		strb	r3, [r2]
+ 117:Core/Src/main.c ****     change_timer_period(500);
+ 392              		.loc 1 117 3 is_stmt 1 view .LVU93
+ 117:Core/Src/main.c ****     change_timer_period(500);
+ 393              		.loc 1 117 5 is_stmt 0 view .LVU94
+ 394 0030 002B     		cmp	r3, #0
+ 395 0032 04D0     		beq	.L22
+ 118:Core/Src/main.c ****   }
+ 396              		.loc 1 118 5 is_stmt 1 view .LVU95
+ 397 0034 FA30     		adds	r0, r0, #250
+ 398              	.LVL23:
+ 118:Core/Src/main.c ****   }
+ 399              		.loc 1 118 5 is_stmt 0 view .LVU96
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 13
+
+
+ 400 0036 4000     		lsls	r0, r0, #1
+ 401              	.LVL24:
+ 118:Core/Src/main.c ****   }
+ 402              		.loc 1 118 5 view .LVU97
+ 403 0038 FFF7FEFF 		bl	change_timer_period
+ 404              	.LVL25:
+ 405              	.L20:
+ 124:Core/Src/main.c **** /* USER CODE END 0 */
+ 406              		.loc 1 124 1 view .LVU98
+ 407              		@ sp needed
+ 408              	.LVL26:
+ 409              	.LVL27:
+ 124:Core/Src/main.c **** /* USER CODE END 0 */
+ 410              		.loc 1 124 1 view .LVU99
+ 411 003c 70BD     		pop	{r4, r5, r6, pc}
+ 412              	.LVL28:
+ 413              	.L22:
+ 121:Core/Src/main.c ****   }
+ 414              		.loc 1 121 5 is_stmt 1 view .LVU100
+ 415 003e FA20     		movs	r0, #250
+ 416              	.LVL29:
+ 121:Core/Src/main.c ****   }
+ 417              		.loc 1 121 5 is_stmt 0 view .LVU101
+ 418 0040 8000     		lsls	r0, r0, #2
+ 419 0042 FFF7FEFF 		bl	change_timer_period
+ 420              	.LVL30:
+ 124:Core/Src/main.c **** /* USER CODE END 0 */
+ 421              		.loc 1 124 1 view .LVU102
+ 422 0046 F9E7     		b	.L20
+ 423              	.L24:
+ 424              		.align	2
+ 425              	.L23:
+ 426 0048 00000000 		.word	last_button_press_time
+ 427 004c 00000000 		.word	speed_state
+ 428              		.cfi_endproc
+ 429              	.LFE346:
+ 431              		.section	.text.TIM16_IRQHandler,"ax",%progbits
+ 432              		.align	1
+ 433              		.global	TIM16_IRQHandler
+ 434              		.syntax unified
+ 435              		.code	16
+ 436              		.thumb_func
+ 438              	TIM16_IRQHandler:
+ 439              	.LFB351:
+ 234:Core/Src/main.c **** 
+ 235:Core/Src/main.c **** /**
+ 236:Core/Src/main.c **** 
+ 237:Core/Src/main.c **** @brief TIM16 interrupt handler - sets flag only
+ 238:Core/Src/main.c **** */
+ 239:Core/Src/main.c **** void TIM16_IRQHandler(void)
+ 240:Core/Src/main.c **** {
+ 440              		.loc 1 240 1 is_stmt 1 view -0
+ 441              		.cfi_startproc
+ 442              		@ args = 0, pretend = 0, frame = 0
+ 443              		@ frame_needed = 0, uses_anonymous_args = 0
+ 444 0000 10B5     		push	{r4, lr}
+ 445              		.cfi_def_cfa_offset 8
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 14
+
+
+ 446              		.cfi_offset 4, -8
+ 447              		.cfi_offset 14, -4
+ 241:Core/Src/main.c **** HAL_TIM_IRQHandler(&htim16);
+ 448              		.loc 1 241 1 view .LVU104
+ 449 0002 0348     		ldr	r0, .L26
+ 450 0004 FFF7FEFF 		bl	HAL_TIM_IRQHandler
+ 451              	.LVL31:
+ 242:Core/Src/main.c **** timer_event = 1;
+ 452              		.loc 1 242 1 view .LVU105
+ 453              		.loc 1 242 13 is_stmt 0 view .LVU106
+ 454 0008 024B     		ldr	r3, .L26+4
+ 455 000a 0122     		movs	r2, #1
+ 456 000c 1A70     		strb	r2, [r3]
+ 243:Core/Src/main.c **** }
+ 457              		.loc 1 243 1 view .LVU107
+ 458              		@ sp needed
+ 459 000e 10BD     		pop	{r4, pc}
+ 460              	.L27:
+ 461              		.align	2
+ 462              	.L26:
+ 463 0010 00000000 		.word	htim16
+ 464 0014 00000000 		.word	timer_event
+ 465              		.cfi_endproc
+ 466              	.LFE351:
+ 468              		.section	.text.Error_Handler,"ax",%progbits
+ 469              		.align	1
+ 470              		.global	Error_Handler
+ 471              		.syntax unified
+ 472              		.code	16
+ 473              		.thumb_func
+ 475              	Error_Handler:
+ 476              	.LFB352:
+ 244:Core/Src/main.c **** 
+ 245:Core/Src/main.c **** /**
+ 246:Core/Src/main.c **** 
+ 247:Core/Src/main.c **** @brief Error handler
+ 248:Core/Src/main.c **** */
+ 249:Core/Src/main.c **** void Error_Handler(void)
+ 250:Core/Src/main.c **** {
+ 477              		.loc 1 250 1 is_stmt 1 view -0
+ 478              		.cfi_startproc
+ 479              		@ Volatile: function does not return.
+ 480              		@ args = 0, pretend = 0, frame = 0
+ 481              		@ frame_needed = 0, uses_anonymous_args = 0
+ 482              		@ link register save eliminated.
+ 251:Core/Src/main.c **** __disable_irq();
+ 483              		.loc 1 251 1 view .LVU109
+ 484              	.LBB28:
+ 485              	.LBI28:
+ 486              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
    1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
    2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 10
-
-
    3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS compiler GCC header file
    4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V5.0.4
    5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     09. April 2018
    6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
    7:Drivers/CMSIS/Include/cmsis_gcc.h **** /*
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 15
+
+
    8:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Copyright (c) 2009-2018 Arm Limited. All rights reserved.
    9:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
   10:Drivers/CMSIS/Include/cmsis_gcc.h ****  * SPDX-License-Identifier: Apache-2.0
@@ -598,14 +893,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
   57:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
   58:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __WEAK
   59:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __WEAK                                 __attribute__((weak))
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 11
-
-
   60:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
   61:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED
   62:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED                               __attribute__((packed, aligned(1)))
   63:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
   64:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_STRUCT
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 16
+
+
   65:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_STRUCT                        struct __attribute__((packed, aligned(1)))
   66:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
   67:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_UNION
@@ -658,14 +953,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  114:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __RESTRICT                             __restrict
  115:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
  116:Drivers/CMSIS/Include/cmsis_gcc.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 12
-
-
  117:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  118:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
  119:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
  120:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
  121:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 17
+
+
  122:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  123:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  124:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
@@ -685,107 +980,107 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  138:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
  139:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  140:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __disable_irq(void)
- 312              		.loc 2 140 27 view .LVU61
- 313              	.LBB28:
+ 487              		.loc 2 140 27 view .LVU110
+ 488              	.LBB29:
  141:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  142:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
- 314              		.loc 2 142 3 view .LVU62
- 315              		.syntax divided
- 316              	@ 142 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
- 317 0000 72B6     		cpsid i
- 318              	@ 0 "" 2
- 319              		.thumb
- 320              		.syntax unified
- 321              	.L21:
- 322              	.LBE28:
- 323              	.LBE27:
- 179:Core/Src/main.c ****     while (1) {}
- 324              		.loc 1 179 5 view .LVU63
- 325              		.loc 1 179 16 view .LVU64
- 326              		.loc 1 179 11 view .LVU65
- 327 0002 FEE7     		b	.L21
- 328              		.cfi_endproc
- 329              	.LFE350:
- 331              		.section	.text.MX_TIM16_Init,"ax",%progbits
- 332              		.align	1
- 333              		.syntax unified
- 334              		.code	16
- 335              		.thumb_func
- 337              	MX_TIM16_Init:
- 338              	.LFB347:
- 127:Core/Src/main.c ****     htim16.Instance = TIM16;
- 339              		.loc 1 127 1 view -0
- 340              		.cfi_startproc
- 341              		@ args = 0, pretend = 0, frame = 0
- 342              		@ frame_needed = 0, uses_anonymous_args = 0
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 13
+ 489              		.loc 2 142 3 view .LVU111
+ 490              		.syntax divided
+ 491              	@ 142 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 492 0000 72B6     		cpsid i
+ 493              	@ 0 "" 2
+ 494              		.thumb
+ 495              		.syntax unified
+ 496              	.L29:
+ 497              	.LBE29:
+ 498              	.LBE28:
+ 252:Core/Src/main.c **** while (1) {}
+ 499              		.loc 1 252 1 view .LVU112
+ 500              		.loc 1 252 12 view .LVU113
+ 501              		.loc 1 252 7 view .LVU114
+ 502 0002 FEE7     		b	.L29
+ 503              		.cfi_endproc
+ 504              	.LFE352:
+ 506              		.section	.text.MX_TIM16_Init,"ax",%progbits
+ 507              		.align	1
+ 508              		.syntax unified
+ 509              		.code	16
+ 510              		.thumb_func
+ 512              	MX_TIM16_Init:
+ 513              	.LFB349:
+ 193:Core/Src/main.c **** htim16.Instance = TIM16;
+ 514              		.loc 1 193 1 view -0
+ 515              		.cfi_startproc
+ 516              		@ args = 0, pretend = 0, frame = 0
+ 517              		@ frame_needed = 0, uses_anonymous_args = 0
+ 518 0000 10B5     		push	{r4, lr}
+ 519              		.cfi_def_cfa_offset 8
+ 520              		.cfi_offset 4, -8
+ 521              		.cfi_offset 14, -4
+ 194:Core/Src/main.c **** htim16.Init.Prescaler = 7999;
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 18
 
 
- 343 0000 10B5     		push	{r4, lr}
- 344              		.cfi_def_cfa_offset 8
- 345              		.cfi_offset 4, -8
- 346              		.cfi_offset 14, -4
- 128:Core/Src/main.c ****     htim16.Init.Prescaler = 7999;     
- 347              		.loc 1 128 5 view .LVU67
- 128:Core/Src/main.c ****     htim16.Init.Prescaler = 7999;     
- 348              		.loc 1 128 21 is_stmt 0 view .LVU68
- 349 0002 0C48     		ldr	r0, .L25
- 350 0004 0C4B     		ldr	r3, .L25+4
- 351 0006 0360     		str	r3, [r0]
- 129:Core/Src/main.c ****     htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
- 352              		.loc 1 129 5 is_stmt 1 view .LVU69
- 129:Core/Src/main.c ****     htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
- 353              		.loc 1 129 27 is_stmt 0 view .LVU70
- 354 0008 0C4B     		ldr	r3, .L25+8
- 355 000a 4360     		str	r3, [r0, #4]
- 130:Core/Src/main.c ****     htim16.Init.Period = 999;          
- 356              		.loc 1 130 5 is_stmt 1 view .LVU71
- 130:Core/Src/main.c ****     htim16.Init.Period = 999;          
- 357              		.loc 1 130 29 is_stmt 0 view .LVU72
- 358 000c 0023     		movs	r3, #0
- 359 000e 8360     		str	r3, [r0, #8]
- 131:Core/Src/main.c ****     htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
- 360              		.loc 1 131 5 is_stmt 1 view .LVU73
- 131:Core/Src/main.c ****     htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
- 361              		.loc 1 131 24 is_stmt 0 view .LVU74
- 362 0010 0B4A     		ldr	r2, .L25+12
- 363 0012 C260     		str	r2, [r0, #12]
- 132:Core/Src/main.c ****     htim16.Init.RepetitionCounter = 0;
- 364              		.loc 1 132 5 is_stmt 1 view .LVU75
- 132:Core/Src/main.c ****     htim16.Init.RepetitionCounter = 0;
- 365              		.loc 1 132 31 is_stmt 0 view .LVU76
- 366 0014 0361     		str	r3, [r0, #16]
- 133:Core/Src/main.c ****     htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
- 367              		.loc 1 133 5 is_stmt 1 view .LVU77
- 133:Core/Src/main.c ****     htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
- 368              		.loc 1 133 35 is_stmt 0 view .LVU78
- 369 0016 4361     		str	r3, [r0, #20]
- 134:Core/Src/main.c ****     
- 370              		.loc 1 134 5 is_stmt 1 view .LVU79
- 134:Core/Src/main.c ****     
- 371              		.loc 1 134 35 is_stmt 0 view .LVU80
- 372 0018 8033     		adds	r3, r3, #128
- 373 001a 8361     		str	r3, [r0, #24]
- 136:Core/Src/main.c ****         Error_Handler();
- 374              		.loc 1 136 5 is_stmt 1 view .LVU81
- 136:Core/Src/main.c ****         Error_Handler();
- 375              		.loc 1 136 9 is_stmt 0 view .LVU82
- 376 001c FFF7FEFF 		bl	HAL_TIM_Base_Init
- 377              	.LVL16:
- 136:Core/Src/main.c ****         Error_Handler();
- 378              		.loc 1 136 8 discriminator 1 view .LVU83
- 379 0020 0028     		cmp	r0, #0
- 380 0022 04D1     		bne	.L24
- 140:Core/Src/main.c **** }
- 381              		.loc 1 140 5 is_stmt 1 view .LVU84
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 14
-
-
- 382              	.LVL17:
- 383              	.LBB29:
- 384              	.LBI29:
- 385              		.file 3 "Drivers/CMSIS/Include/core_cm0.h"
+ 522              		.loc 1 194 1 view .LVU116
+ 194:Core/Src/main.c **** htim16.Init.Prescaler = 7999;
+ 523              		.loc 1 194 17 is_stmt 0 view .LVU117
+ 524 0002 0C48     		ldr	r0, .L33
+ 525 0004 0C4B     		ldr	r3, .L33+4
+ 526 0006 0360     		str	r3, [r0]
+ 195:Core/Src/main.c **** htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+ 527              		.loc 1 195 1 is_stmt 1 view .LVU118
+ 195:Core/Src/main.c **** htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+ 528              		.loc 1 195 23 is_stmt 0 view .LVU119
+ 529 0008 0C4B     		ldr	r3, .L33+8
+ 530 000a 4360     		str	r3, [r0, #4]
+ 196:Core/Src/main.c **** htim16.Init.Period = 999;
+ 531              		.loc 1 196 1 is_stmt 1 view .LVU120
+ 196:Core/Src/main.c **** htim16.Init.Period = 999;
+ 532              		.loc 1 196 25 is_stmt 0 view .LVU121
+ 533 000c 0023     		movs	r3, #0
+ 534 000e 8360     		str	r3, [r0, #8]
+ 197:Core/Src/main.c **** htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+ 535              		.loc 1 197 1 is_stmt 1 view .LVU122
+ 197:Core/Src/main.c **** htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+ 536              		.loc 1 197 20 is_stmt 0 view .LVU123
+ 537 0010 0B4A     		ldr	r2, .L33+12
+ 538 0012 C260     		str	r2, [r0, #12]
+ 198:Core/Src/main.c **** htim16.Init.RepetitionCounter = 0;
+ 539              		.loc 1 198 1 is_stmt 1 view .LVU124
+ 198:Core/Src/main.c **** htim16.Init.RepetitionCounter = 0;
+ 540              		.loc 1 198 27 is_stmt 0 view .LVU125
+ 541 0014 0361     		str	r3, [r0, #16]
+ 199:Core/Src/main.c **** htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+ 542              		.loc 1 199 1 is_stmt 1 view .LVU126
+ 199:Core/Src/main.c **** htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+ 543              		.loc 1 199 31 is_stmt 0 view .LVU127
+ 544 0016 4361     		str	r3, [r0, #20]
+ 200:Core/Src/main.c **** if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
+ 545              		.loc 1 200 1 is_stmt 1 view .LVU128
+ 200:Core/Src/main.c **** if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
+ 546              		.loc 1 200 31 is_stmt 0 view .LVU129
+ 547 0018 8033     		adds	r3, r3, #128
+ 548 001a 8361     		str	r3, [r0, #24]
+ 201:Core/Src/main.c **** Error_Handler();
+ 549              		.loc 1 201 1 is_stmt 1 view .LVU130
+ 201:Core/Src/main.c **** Error_Handler();
+ 550              		.loc 1 201 5 is_stmt 0 view .LVU131
+ 551 001c FFF7FEFF 		bl	HAL_TIM_Base_Init
+ 552              	.LVL32:
+ 201:Core/Src/main.c **** Error_Handler();
+ 553              		.loc 1 201 4 discriminator 1 view .LVU132
+ 554 0020 0028     		cmp	r0, #0
+ 555 0022 04D1     		bne	.L32
+ 204:Core/Src/main.c **** }
+ 556              		.loc 1 204 1 is_stmt 1 view .LVU133
+ 557              	.LVL33:
+ 558              	.LBB30:
+ 559              	.LBI30:
+ 560              		.file 3 "Drivers/CMSIS/Include/core_cm0.h"
    1:Drivers/CMSIS/Include/core_cm0.h **** /**************************************************************************//**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 19
+
+
    2:Drivers/CMSIS/Include/core_cm0.h ****  * @file     core_cm0.h
    3:Drivers/CMSIS/Include/core_cm0.h ****  * @brief    CMSIS Cortex-M0 Core Peripheral Access Layer Header File
    4:Drivers/CMSIS/Include/core_cm0.h ****  * @version  V5.0.5
@@ -838,14 +1133,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
   51:Drivers/CMSIS/Include/core_cm0.h ****      Function-like macros are used to allow more efficient code.
   52:Drivers/CMSIS/Include/core_cm0.h ****  */
   53:Drivers/CMSIS/Include/core_cm0.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 15
-
-
   54:Drivers/CMSIS/Include/core_cm0.h **** 
   55:Drivers/CMSIS/Include/core_cm0.h **** /*******************************************************************************
   56:Drivers/CMSIS/Include/core_cm0.h ****  *                 CMSIS definitions
   57:Drivers/CMSIS/Include/core_cm0.h ****  ******************************************************************************/
   58:Drivers/CMSIS/Include/core_cm0.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 20
+
+
   59:Drivers/CMSIS/Include/core_cm0.h ****   \ingroup Cortex_M0
   60:Drivers/CMSIS/Include/core_cm0.h ****   @{
   61:Drivers/CMSIS/Include/core_cm0.h ****  */
@@ -898,14 +1193,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  108:Drivers/CMSIS/Include/core_cm0.h **** #elif defined ( __CSMC__ )
  109:Drivers/CMSIS/Include/core_cm0.h ****   #if ( __CSMC__ & 0x400U)
  110:Drivers/CMSIS/Include/core_cm0.h ****     #error "Compiler generates FPU instructions for a device without an FPU (check __FPU_PRESENT)"
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 16
-
-
  111:Drivers/CMSIS/Include/core_cm0.h ****   #endif
  112:Drivers/CMSIS/Include/core_cm0.h **** 
  113:Drivers/CMSIS/Include/core_cm0.h **** #endif
  114:Drivers/CMSIS/Include/core_cm0.h **** 
  115:Drivers/CMSIS/Include/core_cm0.h **** #include "cmsis_compiler.h"               /* CMSIS compiler specific defines */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 21
+
+
  116:Drivers/CMSIS/Include/core_cm0.h **** 
  117:Drivers/CMSIS/Include/core_cm0.h **** 
  118:Drivers/CMSIS/Include/core_cm0.h **** #ifdef __cplusplus
@@ -958,14 +1253,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  165:Drivers/CMSIS/Include/core_cm0.h **** #define     __IO    volatile             /*!< Defines 'read / write' permissions */
  166:Drivers/CMSIS/Include/core_cm0.h **** 
  167:Drivers/CMSIS/Include/core_cm0.h **** /* following defines should be used for structure members */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 17
-
-
  168:Drivers/CMSIS/Include/core_cm0.h **** #define     __IM     volatile const      /*! Defines 'read only' structure member permissions */
  169:Drivers/CMSIS/Include/core_cm0.h **** #define     __OM     volatile            /*! Defines 'write only' structure member permissions */
  170:Drivers/CMSIS/Include/core_cm0.h **** #define     __IOM    volatile            /*! Defines 'read / write' structure member permissions */
  171:Drivers/CMSIS/Include/core_cm0.h **** 
  172:Drivers/CMSIS/Include/core_cm0.h **** /*@} end of group Cortex_M0 */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 22
+
+
  173:Drivers/CMSIS/Include/core_cm0.h **** 
  174:Drivers/CMSIS/Include/core_cm0.h **** 
  175:Drivers/CMSIS/Include/core_cm0.h **** 
@@ -1018,14 +1313,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  222:Drivers/CMSIS/Include/core_cm0.h **** #define APSR_V_Pos                         28U                                            /*!< APSR
  223:Drivers/CMSIS/Include/core_cm0.h **** #define APSR_V_Msk                         (1UL << APSR_V_Pos)                            /*!< APSR
  224:Drivers/CMSIS/Include/core_cm0.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 18
-
-
  225:Drivers/CMSIS/Include/core_cm0.h **** 
  226:Drivers/CMSIS/Include/core_cm0.h **** /**
  227:Drivers/CMSIS/Include/core_cm0.h ****   \brief  Union type to access the Interrupt Program Status Register (IPSR).
  228:Drivers/CMSIS/Include/core_cm0.h ****  */
  229:Drivers/CMSIS/Include/core_cm0.h **** typedef union
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 23
+
+
  230:Drivers/CMSIS/Include/core_cm0.h **** {
  231:Drivers/CMSIS/Include/core_cm0.h ****   struct
  232:Drivers/CMSIS/Include/core_cm0.h ****   {
@@ -1078,14 +1373,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  279:Drivers/CMSIS/Include/core_cm0.h **** #define xPSR_ISR_Pos                        0U                                            /*!< xPSR
  280:Drivers/CMSIS/Include/core_cm0.h **** #define xPSR_ISR_Msk                       (0x1FFUL /*<< xPSR_ISR_Pos*/)                  /*!< xPSR
  281:Drivers/CMSIS/Include/core_cm0.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 19
-
-
  282:Drivers/CMSIS/Include/core_cm0.h **** 
  283:Drivers/CMSIS/Include/core_cm0.h **** /**
  284:Drivers/CMSIS/Include/core_cm0.h ****   \brief  Union type to access the Control Registers (CONTROL).
  285:Drivers/CMSIS/Include/core_cm0.h ****  */
  286:Drivers/CMSIS/Include/core_cm0.h **** typedef union
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 24
+
+
  287:Drivers/CMSIS/Include/core_cm0.h **** {
  288:Drivers/CMSIS/Include/core_cm0.h ****   struct
  289:Drivers/CMSIS/Include/core_cm0.h ****   {
@@ -1138,14 +1433,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  336:Drivers/CMSIS/Include/core_cm0.h ****  */
  337:Drivers/CMSIS/Include/core_cm0.h **** 
  338:Drivers/CMSIS/Include/core_cm0.h **** /**
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 20
-
-
  339:Drivers/CMSIS/Include/core_cm0.h ****   \brief  Structure type to access the System Control Block (SCB).
  340:Drivers/CMSIS/Include/core_cm0.h ****  */
  341:Drivers/CMSIS/Include/core_cm0.h **** typedef struct
  342:Drivers/CMSIS/Include/core_cm0.h **** {
  343:Drivers/CMSIS/Include/core_cm0.h ****   __IM  uint32_t CPUID;                  /*!< Offset: 0x000 (R/ )  CPUID Base Register */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 25
+
+
  344:Drivers/CMSIS/Include/core_cm0.h ****   __IOM uint32_t ICSR;                   /*!< Offset: 0x004 (R/W)  Interrupt Control and State Regi
  345:Drivers/CMSIS/Include/core_cm0.h ****         uint32_t RESERVED0;
  346:Drivers/CMSIS/Include/core_cm0.h ****   __IOM uint32_t AIRCR;                  /*!< Offset: 0x00C (R/W)  Application Interrupt and Reset 
@@ -1198,14 +1493,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  393:Drivers/CMSIS/Include/core_cm0.h **** #define SCB_ICSR_VECTPENDING_Msk           (0x1FFUL << SCB_ICSR_VECTPENDING_Pos)          /*!< SCB 
  394:Drivers/CMSIS/Include/core_cm0.h **** 
  395:Drivers/CMSIS/Include/core_cm0.h **** #define SCB_ICSR_VECTACTIVE_Pos             0U                                            /*!< SCB 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 21
-
-
  396:Drivers/CMSIS/Include/core_cm0.h **** #define SCB_ICSR_VECTACTIVE_Msk            (0x1FFUL /*<< SCB_ICSR_VECTACTIVE_Pos*/)       /*!< SCB 
  397:Drivers/CMSIS/Include/core_cm0.h **** 
  398:Drivers/CMSIS/Include/core_cm0.h **** /* SCB Application Interrupt and Reset Control Register Definitions */
  399:Drivers/CMSIS/Include/core_cm0.h **** #define SCB_AIRCR_VECTKEY_Pos              16U                                            /*!< SCB 
  400:Drivers/CMSIS/Include/core_cm0.h **** #define SCB_AIRCR_VECTKEY_Msk              (0xFFFFUL << SCB_AIRCR_VECTKEY_Pos)            /*!< SCB 
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 26
+
+
  401:Drivers/CMSIS/Include/core_cm0.h **** 
  402:Drivers/CMSIS/Include/core_cm0.h **** #define SCB_AIRCR_VECTKEYSTAT_Pos          16U                                            /*!< SCB 
  403:Drivers/CMSIS/Include/core_cm0.h **** #define SCB_AIRCR_VECTKEYSTAT_Msk          (0xFFFFUL << SCB_AIRCR_VECTKEYSTAT_Pos)        /*!< SCB 
@@ -1258,14 +1553,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  450:Drivers/CMSIS/Include/core_cm0.h ****   __IOM uint32_t CTRL;                   /*!< Offset: 0x000 (R/W)  SysTick Control and Status Regis
  451:Drivers/CMSIS/Include/core_cm0.h ****   __IOM uint32_t LOAD;                   /*!< Offset: 0x004 (R/W)  SysTick Reload Value Register */
  452:Drivers/CMSIS/Include/core_cm0.h ****   __IOM uint32_t VAL;                    /*!< Offset: 0x008 (R/W)  SysTick Current Value Register *
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 22
-
-
  453:Drivers/CMSIS/Include/core_cm0.h ****   __IM  uint32_t CALIB;                  /*!< Offset: 0x00C (R/ )  SysTick Calibration Register */
  454:Drivers/CMSIS/Include/core_cm0.h **** } SysTick_Type;
  455:Drivers/CMSIS/Include/core_cm0.h **** 
  456:Drivers/CMSIS/Include/core_cm0.h **** /* SysTick Control / Status Register Definitions */
  457:Drivers/CMSIS/Include/core_cm0.h **** #define SysTick_CTRL_COUNTFLAG_Pos         16U                                            /*!< SysT
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 27
+
+
  458:Drivers/CMSIS/Include/core_cm0.h **** #define SysTick_CTRL_COUNTFLAG_Msk         (1UL << SysTick_CTRL_COUNTFLAG_Pos)            /*!< SysT
  459:Drivers/CMSIS/Include/core_cm0.h **** 
  460:Drivers/CMSIS/Include/core_cm0.h **** #define SysTick_CTRL_CLKSOURCE_Pos          2U                                            /*!< SysT
@@ -1318,14 +1613,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  507:Drivers/CMSIS/Include/core_cm0.h **** /**
  508:Drivers/CMSIS/Include/core_cm0.h ****   \brief   Mask and shift a bit field value for use in a register bit range.
  509:Drivers/CMSIS/Include/core_cm0.h ****   \param[in] field  Name of the register bit field.
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 23
-
-
  510:Drivers/CMSIS/Include/core_cm0.h ****   \param[in] value  Value of the bit field. This parameter is interpreted as an uint32_t type.
  511:Drivers/CMSIS/Include/core_cm0.h ****   \return           Masked and shifted value.
  512:Drivers/CMSIS/Include/core_cm0.h **** */
  513:Drivers/CMSIS/Include/core_cm0.h **** #define _VAL2FLD(field, value)    (((uint32_t)(value) << field ## _Pos) & field ## _Msk)
  514:Drivers/CMSIS/Include/core_cm0.h **** 
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 28
+
+
  515:Drivers/CMSIS/Include/core_cm0.h **** /**
  516:Drivers/CMSIS/Include/core_cm0.h ****   \brief     Mask and shift a register value to extract a bit filed value.
  517:Drivers/CMSIS/Include/core_cm0.h ****   \param[in] field  Name of the register bit field.
@@ -1378,14 +1673,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  564:Drivers/CMSIS/Include/core_cm0.h ****   \defgroup CMSIS_Core_NVICFunctions NVIC Functions
  565:Drivers/CMSIS/Include/core_cm0.h ****   \brief    Functions that manage interrupts and exceptions via the NVIC.
  566:Drivers/CMSIS/Include/core_cm0.h ****   @{
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 24
-
-
  567:Drivers/CMSIS/Include/core_cm0.h ****  */
  568:Drivers/CMSIS/Include/core_cm0.h **** 
  569:Drivers/CMSIS/Include/core_cm0.h **** #ifdef CMSIS_NVIC_VIRTUAL
  570:Drivers/CMSIS/Include/core_cm0.h ****   #ifndef CMSIS_NVIC_VIRTUAL_HEADER_FILE
  571:Drivers/CMSIS/Include/core_cm0.h ****     #define CMSIS_NVIC_VIRTUAL_HEADER_FILE "cmsis_nvic_virtual.h"
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 29
+
+
  572:Drivers/CMSIS/Include/core_cm0.h ****   #endif
  573:Drivers/CMSIS/Include/core_cm0.h ****   #include CMSIS_NVIC_VIRTUAL_HEADER_FILE
  574:Drivers/CMSIS/Include/core_cm0.h **** #else
@@ -1438,74 +1733,74 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  621:Drivers/CMSIS/Include/core_cm0.h ****   \note    IRQn must not be negative.
  622:Drivers/CMSIS/Include/core_cm0.h ****  */
  623:Drivers/CMSIS/Include/core_cm0.h **** __STATIC_INLINE void __NVIC_EnableIRQ(IRQn_Type IRQn)
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 25
-
-
- 386              		.loc 3 623 22 view .LVU85
- 387              	.LBB30:
+ 561              		.loc 3 623 22 view .LVU134
+ 562              	.LBB31:
  624:Drivers/CMSIS/Include/core_cm0.h **** {
  625:Drivers/CMSIS/Include/core_cm0.h ****   if ((int32_t)(IRQn) >= 0)
- 388              		.loc 3 625 3 view .LVU86
+ 563              		.loc 3 625 3 view .LVU135
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 30
+
+
  626:Drivers/CMSIS/Include/core_cm0.h ****   {
  627:Drivers/CMSIS/Include/core_cm0.h ****     NVIC->ISER[0U] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
- 389              		.loc 3 627 5 view .LVU87
- 390              		.loc 3 627 20 is_stmt 0 view .LVU88
- 391 0024 074B     		ldr	r3, .L25+16
- 392 0026 8022     		movs	r2, #128
- 393 0028 9203     		lsls	r2, r2, #14
- 394 002a 1A60     		str	r2, [r3]
- 395              	.LVL18:
- 396              		.loc 3 627 20 view .LVU89
- 397              	.LBE30:
- 398              	.LBE29:
- 141:Core/Src/main.c **** 
- 399              		.loc 1 141 1 view .LVU90
- 400              		@ sp needed
- 401 002c 10BD     		pop	{r4, pc}
- 402              	.L24:
- 137:Core/Src/main.c ****     }
- 403              		.loc 1 137 9 is_stmt 1 view .LVU91
- 404 002e FFF7FEFF 		bl	Error_Handler
- 405              	.LVL19:
- 406              	.L26:
- 407 0032 C046     		.align	2
- 408              	.L25:
- 409 0034 00000000 		.word	htim16
- 410 0038 00440140 		.word	1073824768
- 411 003c 3F1F0000 		.word	7999
- 412 0040 E7030000 		.word	999
- 413 0044 00E100E0 		.word	-536813312
- 414              		.cfi_endproc
- 415              	.LFE347:
- 417              		.section	.text.SystemClock_Config,"ax",%progbits
- 418              		.align	1
- 419              		.global	SystemClock_Config
- 420              		.syntax unified
- 421              		.code	16
- 422              		.thumb_func
- 424              	SystemClock_Config:
- 425              	.LFB346:
- 103:Core/Src/main.c ****     LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
- 426              		.loc 1 103 1 view -0
- 427              		.cfi_startproc
- 428              		@ args = 0, pretend = 0, frame = 0
- 429              		@ frame_needed = 0, uses_anonymous_args = 0
- 430 0000 10B5     		push	{r4, lr}
- 431              		.cfi_def_cfa_offset 8
- 432              		.cfi_offset 4, -8
- 433              		.cfi_offset 14, -4
- 104:Core/Src/main.c ****     while(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0) {}
- 434              		.loc 1 104 5 view .LVU93
- 435              	.LVL20:
- 436              	.LBB31:
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 26
-
-
- 437              	.LBI31:
- 438              		.file 4 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h"
+ 564              		.loc 3 627 5 view .LVU136
+ 565              		.loc 3 627 20 is_stmt 0 view .LVU137
+ 566 0024 074B     		ldr	r3, .L33+16
+ 567 0026 8022     		movs	r2, #128
+ 568 0028 9203     		lsls	r2, r2, #14
+ 569 002a 1A60     		str	r2, [r3]
+ 570              	.LVL34:
+ 571              		.loc 3 627 20 view .LVU138
+ 572              	.LBE31:
+ 573              	.LBE30:
+ 205:Core/Src/main.c **** 
+ 574              		.loc 1 205 1 view .LVU139
+ 575              		@ sp needed
+ 576 002c 10BD     		pop	{r4, pc}
+ 577              	.L32:
+ 202:Core/Src/main.c **** }
+ 578              		.loc 1 202 1 is_stmt 1 view .LVU140
+ 579 002e FFF7FEFF 		bl	Error_Handler
+ 580              	.LVL35:
+ 581              	.L34:
+ 582 0032 C046     		.align	2
+ 583              	.L33:
+ 584 0034 00000000 		.word	htim16
+ 585 0038 00440140 		.word	1073824768
+ 586 003c 3F1F0000 		.word	7999
+ 587 0040 E7030000 		.word	999
+ 588 0044 00E100E0 		.word	-536813312
+ 589              		.cfi_endproc
+ 590              	.LFE349:
+ 592              		.section	.text.SystemClock_Config,"ax",%progbits
+ 593              		.align	1
+ 594              		.global	SystemClock_Config
+ 595              		.syntax unified
+ 596              		.code	16
+ 597              		.thumb_func
+ 599              	SystemClock_Config:
+ 600              	.LFB348:
+ 169:Core/Src/main.c **** LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
+ 601              		.loc 1 169 1 view -0
+ 602              		.cfi_startproc
+ 603              		@ args = 0, pretend = 0, frame = 0
+ 604              		@ frame_needed = 0, uses_anonymous_args = 0
+ 605 0000 10B5     		push	{r4, lr}
+ 606              		.cfi_def_cfa_offset 8
+ 607              		.cfi_offset 4, -8
+ 608              		.cfi_offset 14, -4
+ 170:Core/Src/main.c **** while(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0) {}
+ 609              		.loc 1 170 1 view .LVU142
+ 610              	.LVL36:
+ 611              	.LBB32:
+ 612              	.LBI32:
+ 613              		.file 4 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h"
    1:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
    2:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   ******************************************************************************
    3:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @file    stm32f0xx_ll_system.h
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 31
+
+
    4:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @author  MCD Application Team
    5:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief   Header file of SYSTEM LL module.
    6:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   @verbatim
@@ -1558,14 +1853,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
   53:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /* Private variables ---------------------------------------------------------*/
   54:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
   55:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /* Private constants ---------------------------------------------------------*/
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 27
-
-
   56:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /** @defgroup SYSTEM_LL_Private_Constants SYSTEM Private Constants
   57:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @{
   58:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
   59:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
   60:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 32
+
+
   61:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @}
   62:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
   63:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
@@ -1618,14 +1913,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  110:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /*SYSCFG_CFGR1_USART2_DMA_RMP*/
  111:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined (SYSCFG_CFGR1_USART3_DMA_RMP)
  112:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_USART3_RMP_DMA1CH67      ((SYSCFG_CFGR1_USART3_DMA_RMP >> 8U) | (uint32_t)0x00000
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 28
-
-
  113:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_USART3_RMP_DMA1CH32      ((SYSCFG_CFGR1_USART3_DMA_RMP >> 8U) | SYSCFG_CFGR1_USAR
  114:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_CFGR1_USART3_DMA_RMP */
  115:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  116:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @}
  117:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 33
+
+
  118:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_CFGR1_USART1TX_DMA_RMP || SYSCFG_CFGR1_USART1RX_DMA_RMP || SYSCFG_CFGR1_USART2_DMA
  119:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
  120:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined (SYSCFG_CFGR1_SPI2_DMA_RMP)
@@ -1678,14 +1973,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  167:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_TIM16_RMP_DMA1_CH4       ((SYSCFG_CFGR1_TIM16_DMA_RMP >> 8U) | SYSCFG_CFGR1_TIM16
  168:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_CFGR1_TIM16_DMA_RMP2 */
  169:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_CFGR1_TIM16_DMA_RMP */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 29
-
-
  170:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_CFGR1_TIM17_DMA_RMP)
  171:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined (SYSCFG_CFGR1_TIM17_DMA_RMP2)
  172:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_TIM17_RMP_DMA1_CH1       (((SYSCFG_CFGR1_TIM17_DMA_RMP | SYSCFG_CFGR1_TIM17_DMA_R
  173:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_TIM17_RMP_DMA1_CH2       (((SYSCFG_CFGR1_TIM17_DMA_RMP | SYSCFG_CFGR1_TIM17_DMA_R
  174:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_TIM17_RMP_DMA1_CH7       ((SYSCFG_CFGR1_TIM17_DMA_RMP2 >> 8U) | SYSCFG_CFGR1_TIM1
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 34
+
+
  175:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #else
  176:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_TIM17_RMP_DMA1_CH1       ((SYSCFG_CFGR1_TIM17_DMA_RMP >> 8U) | (uint32_t)0x000000
  177:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_TIM17_RMP_DMA1_CH2       ((SYSCFG_CFGR1_TIM17_DMA_RMP >> 8U) | SYSCFG_CFGR1_TIM17
@@ -1738,14 +2033,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  224:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_EXTI_PORTA               (uint32_t)0U               /*!< EXTI PORT A */
  225:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_EXTI_PORTB               (uint32_t)1U               /*!< EXTI PORT B */
  226:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_EXTI_PORTC               (uint32_t)2U               /*!< EXTI PORT C */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 30
-
-
  227:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(GPIOD_BASE)
  228:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_EXTI_PORTD               (uint32_t)3U               /*!< EXTI PORT D */
  229:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /*GPIOD_BASE*/
  230:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(GPIOE_BASE)
  231:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_EXTI_PORTE               (uint32_t)4U               /*!< EXTI PORT E */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 35
+
+
  232:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /*GPIOE_BASE*/
  233:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_SYSCFG_EXTI_PORTF               (uint32_t)5U               /*!< EXTI PORT F */
  234:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
@@ -1798,14 +2093,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  281:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_DBGMCU_APB1_GRP1_TIM2_STOP      DBGMCU_APB1_FZ_DBG_TIM2_STOP        /*!< TIM2 counter st
  282:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /*DBGMCU_APB1_FZ_DBG_TIM2_STOP*/
  283:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_DBGMCU_APB1_GRP1_TIM3_STOP      DBGMCU_APB1_FZ_DBG_TIM3_STOP        /*!< TIM3 counter st
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 31
-
-
  284:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(DBGMCU_APB1_FZ_DBG_TIM6_STOP)
  285:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_DBGMCU_APB1_GRP1_TIM6_STOP      DBGMCU_APB1_FZ_DBG_TIM6_STOP        /*!< TIM6 counter st
  286:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /*DBGMCU_APB1_FZ_DBG_TIM6_STOP*/
  287:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(DBGMCU_APB1_FZ_DBG_TIM7_STOP)
  288:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_DBGMCU_APB1_GRP1_TIM7_STOP      DBGMCU_APB1_FZ_DBG_TIM7_STOP        /*!< TIM7 counter st
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 36
+
+
  289:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /*DBGMCU_APB1_FZ_DBG_TIM7_STOP*/
  290:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_DBGMCU_APB1_GRP1_TIM14_STOP     DBGMCU_APB1_FZ_DBG_TIM14_STOP       /*!< TIM14 counter s
  291:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #define LL_DBGMCU_APB1_GRP1_RTC_STOP       DBGMCU_APB1_FZ_DBG_RTC_STOP         /*!< RTC Calendar fr
@@ -1858,14 +2153,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  338:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
  339:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  340:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Set memory mapping at address 0x00000000
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 32
-
-
  341:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_CFGR1 MEM_MODE      LL_SYSCFG_SetRemapMemory
  342:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @param  Memory This parameter can be one of the following values:
  343:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_REMAP_FLASH
  344:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_REMAP_SYSTEMFLASH
  345:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_REMAP_SRAM
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 37
+
+
  346:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
  347:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
  348:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE void LL_SYSCFG_SetRemapMemory(uint32_t Memory)
@@ -1918,14 +2213,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  395:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_CFGR1_USART1TX_DMA_RMP) || defined(SYSCFG_CFGR1_USART1RX_DMA_RMP) || defined(SYS
  396:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  397:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Set DMA request remapping bits for USART
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 33
-
-
  398:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_CFGR1 USART1TX_DMA_RMP  LL_SYSCFG_SetRemapDMA_USART\n
  399:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         SYSCFG_CFGR1 USART1RX_DMA_RMP  LL_SYSCFG_SetRemapDMA_USART\n
  400:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         SYSCFG_CFGR1 USART2_DMA_RMP  LL_SYSCFG_SetRemapDMA_USART\n
  401:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         SYSCFG_CFGR1 USART3_DMA_RMP  LL_SYSCFG_SetRemapDMA_USART
  402:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @param  Remap This parameter can be one of the following values:
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 38
+
+
  403:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_USART1TX_RMP_DMA1CH2 (*)
  404:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_USART1TX_RMP_DMA1CH4 (*)
  405:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_USART1RX_RMP_DMA1CH3 (*)
@@ -1978,14 +2273,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  452:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  453:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Set DMA request remapping bits for ADC
  454:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_CFGR1 ADC_DMA_RMP   LL_SYSCFG_SetRemapDMA_ADC
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 34
-
-
  455:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @param  Remap This parameter can be one of the following values:
  456:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_ADC1_RMP_DMA1_CH1
  457:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_ADC1_RMP_DMA1_CH2
  458:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
  459:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 39
+
+
  460:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE void LL_SYSCFG_SetRemapDMA_ADC(uint32_t Remap)
  461:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
  462:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   MODIFY_REG(SYSCFG->CFGR1, SYSCFG_CFGR1_ADC_DMA_RMP, Remap);
@@ -2038,14 +2333,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  509:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  510:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
  511:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 35
-
-
  512:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Disable PIN pair PA11/12 mapped instead of PA9/10 (control the mapping of either
  513:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * PA9/10 or PA11/12 pin pair on small pin-count packages)
  514:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_CFGR1 PA11_PA12_RMP  LL_SYSCFG_DisablePinRemap
  515:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
  516:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 40
+
+
  517:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE void LL_SYSCFG_DisablePinRemap(void)
  518:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
  519:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   CLEAR_BIT(SYSCFG->CFGR1, SYSCFG_CFGR1_PA11_PA12_RMP);
@@ -2098,14 +2393,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  566:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_I2C_FASTMODEPLUS_I2C1 (*)
  567:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_I2C_FASTMODEPLUS_I2C2 (*)
  568:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_I2C_FASTMODEPLUS_PA9 (*)
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 36
-
-
  569:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_SYSCFG_I2C_FASTMODEPLUS_PA10 (*)
  570:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *
  571:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         (*) value not defined in all devices
  572:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
  573:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 41
+
+
  574:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE void LL_SYSCFG_DisableFastModePlus(uint32_t ConfigFastModePlus)
  575:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
  576:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   CLEAR_BIT(SYSCFG->CFGR1, ConfigFastModePlus);
@@ -2158,14 +2453,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  623:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
  624:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
  625:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE void LL_SYSCFG_SetEXTISource(uint32_t Port, uint32_t Line)
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 37
-
-
  626:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
  627:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   MODIFY_REG(SYSCFG->EXTICR[Line & 0xFF], SYSCFG_EXTICR1_EXTI0 << (Line >> 16), Port << (Line >> 16
  628:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  629:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
  630:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 42
+
+
  631:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Get the configured defined for specific EXTI Line
  632:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_EXTICR1 EXTI0         LL_SYSCFG_SetEXTISource\n
  633:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         SYSCFG_EXTICR1 EXTI1         LL_SYSCFG_SetEXTISource\n
@@ -2218,14 +2513,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  680:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE0_SR_EWDG)
  681:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  682:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if Window watchdog interrupt occurred or not.
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 38
-
-
  683:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE0 SR_EWDG       LL_SYSCFG_IsActiveFlag_WWDG
  684:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
  685:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
  686:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_WWDG(void)
  687:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 43
+
+
  688:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[0], SYSCFG_ITLINE0_SR_EWDG) == (SYSCFG_ITLINE0_SR_EWDG));
  689:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  690:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE0_SR_EWDG */
@@ -2278,14 +2573,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  737:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  738:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE2_SR_RTC_TSTAMP */
  739:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 39
-
-
  740:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE2_SR_RTC_ALRA)
  741:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  742:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if RTC Alarm interrupt occurred or not (EXTI line 17).
  743:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE2 SR_RTC_ALRA   LL_SYSCFG_IsActiveFlag_RTC_ALRA
  744:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 44
+
+
  745:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
  746:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_RTC_ALRA(void)
  747:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
@@ -2338,14 +2633,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  794:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_EXTI0(void)
  795:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
  796:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[5], SYSCFG_ITLINE5_SR_EXTI0) == (SYSCFG_ITLINE5_SR_EXTI0));
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 40
-
-
  797:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  798:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE5_SR_EXTI0 */
  799:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
  800:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE5_SR_EXTI1)
  801:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 45
+
+
  802:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if EXTI line 1 interrupt occurred or not.
  803:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE5 SR_EXTI1      LL_SYSCFG_IsActiveFlag_EXTI1
  804:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
@@ -2398,14 +2693,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  851:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE7 SR_EXTI5      LL_SYSCFG_IsActiveFlag_EXTI5
  852:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
  853:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 41
-
-
  854:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_EXTI5(void)
  855:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
  856:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[7], SYSCFG_ITLINE7_SR_EXTI5) == (SYSCFG_ITLINE7_SR_EXTI5));
  857:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  858:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE7_SR_EXTI5 */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 46
+
+
  859:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
  860:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE7_SR_EXTI6)
  861:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
@@ -2458,14 +2753,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  908:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE7_SR_EXTI10)
  909:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  910:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if EXTI line 10 interrupt occurred or not.
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 42
-
-
  911:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE7 SR_EXTI10     LL_SYSCFG_IsActiveFlag_EXTI10
  912:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
  913:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
  914:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_EXTI10(void)
  915:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 47
+
+
  916:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[7], SYSCFG_ITLINE7_SR_EXTI10) == (SYSCFG_ITLINE7_SR_EXTI10));
  917:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  918:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE7_SR_EXTI10 */
@@ -2518,14 +2813,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  965:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
  966:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE7_SR_EXTI14 */
  967:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 43
-
-
  968:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE7_SR_EXTI15)
  969:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
  970:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if EXTI line 15 interrupt occurred or not.
  971:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE7 SR_EXTI15     LL_SYSCFG_IsActiveFlag_EXTI15
  972:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 48
+
+
  973:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
  974:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_EXTI15(void)
  975:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
@@ -2578,14 +2873,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1022:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_DMA1_CH2(void)
 1023:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1024:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[10], SYSCFG_ITLINE10_SR_DMA1_CH2) == (SYSCFG_ITLINE10_SR_DMA1
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 44
-
-
 1025:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1026:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE10_SR_DMA1_CH2 */
 1027:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1028:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE10_SR_DMA1_CH3)
 1029:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 49
+
+
 1030:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if DMA1 channel 3 interrupt occurred or not.
 1031:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE10 SR_DMA1_CH3   LL_SYSCFG_IsActiveFlag_DMA1_CH3
 1032:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
@@ -2638,14 +2933,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1079:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE11 SR_DMA1_CH5   LL_SYSCFG_IsActiveFlag_DMA1_CH5
 1080:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
 1081:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 45
-
-
 1082:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_DMA1_CH5(void)
 1083:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1084:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[11], SYSCFG_ITLINE11_SR_DMA1_CH5) == (SYSCFG_ITLINE11_SR_DMA1
 1085:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1086:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE11_SR_DMA1_CH5 */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 50
+
+
 1087:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1088:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE11_SR_DMA1_CH6)
 1089:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
@@ -2698,14 +2993,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1136:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE11_SR_DMA2_CH5)
 1137:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
 1138:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if DMA2 channel 5 interrupt occurred or not.
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 46
-
-
 1139:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE11 SR_DMA2_CH5   LL_SYSCFG_IsActiveFlag_DMA2_CH5
 1140:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
 1141:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1142:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_DMA2_CH5(void)
 1143:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 51
+
+
 1144:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[11], SYSCFG_ITLINE11_SR_DMA2_CH5) == (SYSCFG_ITLINE11_SR_DMA2
 1145:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1146:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE11_SR_DMA2_CH5 */
@@ -2758,14 +3053,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1193:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1194:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE13_SR_TIM1_BRK */
 1195:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 47
-
-
 1196:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE13_SR_TIM1_UPD)
 1197:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
 1198:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if Timer 1 update interrupt occurred or not.
 1199:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE13 SR_TIM1_UPD   LL_SYSCFG_IsActiveFlag_TIM1_UPD
 1200:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 52
+
+
 1201:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1202:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_TIM1_UPD(void)
 1203:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
@@ -2818,14 +3113,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1250:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_TIM2(void)
 1251:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1252:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[15], SYSCFG_ITLINE15_SR_TIM2_GLB) == (SYSCFG_ITLINE15_SR_TIM2
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 48
-
-
 1253:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1254:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE15_SR_TIM2_GLB */
 1255:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1256:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE16_SR_TIM3_GLB)
 1257:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 53
+
+
 1258:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if Timer 3 interrupt occurred or not.
 1259:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE16 SR_TIM3_GLB   LL_SYSCFG_IsActiveFlag_TIM3
 1260:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
@@ -2878,14 +3173,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1307:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE19 SR_TIM14_GLB  LL_SYSCFG_IsActiveFlag_TIM14
 1308:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
 1309:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 49
-
-
 1310:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_TIM14(void)
 1311:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1312:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[19], SYSCFG_ITLINE19_SR_TIM14_GLB) == (SYSCFG_ITLINE19_SR_TIM
 1313:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1314:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE19_SR_TIM14_GLB */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 54
+
+
 1315:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1316:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE20_SR_TIM15_GLB)
 1317:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
@@ -2938,14 +3233,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1364:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE24_SR_I2C2_GLB)
 1365:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
 1366:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if I2C2 interrupt occurred or not.
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 50
-
-
 1367:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE24 SR_I2C2_GLB   LL_SYSCFG_IsActiveFlag_I2C2
 1368:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
 1369:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1370:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_I2C2(void)
 1371:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 55
+
+
 1372:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[24], SYSCFG_ITLINE24_SR_I2C2_GLB) == (SYSCFG_ITLINE24_SR_I2C2
 1373:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1374:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE24_SR_I2C2_GLB */
@@ -2998,14 +3293,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1421:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1422:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE28_SR_USART2_GLB */
 1423:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 51
-
-
 1424:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE29_SR_USART3_GLB)
 1425:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
 1426:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if USART3 interrupt occurred or not, combined with EXTI line 28.
 1427:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE29 SR_USART3_GLB  LL_SYSCFG_IsActiveFlag_USART3
 1428:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 56
+
+
 1429:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1430:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_USART3(void)
 1431:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
@@ -3058,14 +3353,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1478:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_SYSCFG_IsActiveFlag_USART7(void)
 1479:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1480:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (READ_BIT(SYSCFG->IT_LINE_SR[29], SYSCFG_ITLINE29_SR_USART7_GLB) == (SYSCFG_ITLINE29_SR_US
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 52
-
-
 1481:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1482:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /* SYSCFG_ITLINE29_SR_USART7_GLB */
 1483:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1484:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_ITLINE29_SR_USART8_GLB)
 1485:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 57
+
+
 1486:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Check if USART8 interrupt occurred or not.
 1487:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_ITLINE29 SR_USART8_GLB  LL_SYSCFG_IsActiveFlag_USART8
 1488:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval State of bit (1 or 0).
@@ -3118,14 +3413,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1535:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #if defined(SYSCFG_CFGR2_PVD_LOCK)
 1536:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   MODIFY_REG(SYSCFG->CFGR2, SYSCFG_CFGR2_LOCKUP_LOCK | SYSCFG_CFGR2_SRAM_PARITY_LOCK | SYSCFG_CFGR2
 1537:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #else
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 53
-
-
 1538:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   MODIFY_REG(SYSCFG->CFGR2, SYSCFG_CFGR2_LOCKUP_LOCK | SYSCFG_CFGR2_SRAM_PARITY_LOCK, Break);
 1539:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** #endif /*SYSCFG_CFGR2_PVD_LOCK*/
 1540:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1541:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1542:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 58
+
+
 1543:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Get connections to TIMx Break inputs
 1544:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll SYSCFG_CFGR2 LOCKUP_LOCK   LL_SYSCFG_GetTIMBreakInputs\n
 1545:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         SYSCFG_CFGR2 SRAM_PARITY_LOCK  LL_SYSCFG_GetTIMBreakInputs\n
@@ -3178,14 +3473,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1592:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
 1593:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Return the device identifier
 1594:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @note For STM32F03x devices, the device ID is 0x444
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 54
-
-
 1595:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @note For STM32F04x devices, the device ID is 0x445.
 1596:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @note For STM32F05x devices, the device ID is 0x440
 1597:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @note For STM32F07x devices, the device ID is 0x448
 1598:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @note For STM32F09x devices, the device ID is 0x442
 1599:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll DBGMCU_IDCODE DEV_ID        LL_DBGMCU_GetDeviceID
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 59
+
+
 1600:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval Values between Min_Data=0x00 and Max_Data=0xFFF
 1601:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1602:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_DBGMCU_GetDeviceID(void)
@@ -3238,14 +3533,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1649:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
 1650:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Disable the Debug Module during STANDBY mode
 1651:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll DBGMCU_CR    DBG_STANDBY   LL_DBGMCU_DisableDBGStandbyMode
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 55
-
-
 1652:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
 1653:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1654:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE void LL_DBGMCU_DisableDBGStandbyMode(void)
 1655:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1656:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   CLEAR_BIT(DBGMCU->CR, DBGMCU_CR_DBG_STANDBY);
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 60
+
+
 1657:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1658:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1659:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
@@ -3298,14 +3593,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1706:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_TIM6_STOP (*)
 1707:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_TIM7_STOP (*)
 1708:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_TIM14_STOP
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 56
-
-
 1709:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_RTC_STOP
 1710:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_WWDG_STOP
 1711:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_IWDG_STOP
 1712:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_I2C1_STOP
 1713:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_DBGMCU_APB1_GRP1_CAN_STOP (*)
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 61
+
+
 1714:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *
 1715:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         (*) value not defined in all devices
 1716:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
@@ -3358,14 +3653,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1763:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @}
 1764:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1765:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 57
-
-
 1766:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /** @defgroup SYSTEM_LL_EF_FLASH FLASH
 1767:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @{
 1768:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1769:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1770:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 62
+
+
 1771:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @brief  Set FLASH Latency
 1772:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @rmtoll FLASH_ACR    LATENCY       LL_FLASH_SetLatency
 1773:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @param  Latency This parameter can be one of the following values:
@@ -3374,29 +3669,29 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1776:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   * @retval None
 1777:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1778:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE void LL_FLASH_SetLatency(uint32_t Latency)
- 439              		.loc 4 1778 22 view .LVU94
- 440              	.LBB32:
+ 614              		.loc 4 1778 22 view .LVU143
+ 615              	.LBB33:
 1779:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1780:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, Latency);
- 441              		.loc 4 1780 3 view .LVU95
- 442 0002 1A4A     		ldr	r2, .L35
- 443 0004 1368     		ldr	r3, [r2]
- 444 0006 0121     		movs	r1, #1
- 445 0008 8B43     		bics	r3, r1
- 446 000a 1360     		str	r3, [r2]
- 447              	.LVL21:
- 448              		.loc 4 1780 3 is_stmt 0 view .LVU96
- 449              	.LBE32:
- 450              	.LBE31:
- 105:Core/Src/main.c ****     
- 451              		.loc 1 105 5 is_stmt 1 view .LVU97
- 452              	.L28:
- 105:Core/Src/main.c ****     
- 453              		.loc 1 105 57 discriminator 2 view .LVU98
- 105:Core/Src/main.c ****     
- 454              		.loc 1 105 33 discriminator 2 view .LVU99
- 455              	.LBB33:
- 456              	.LBI33:
+ 616              		.loc 4 1780 3 view .LVU144
+ 617 0002 1A4A     		ldr	r2, .L43
+ 618 0004 1368     		ldr	r3, [r2]
+ 619 0006 0121     		movs	r1, #1
+ 620 0008 8B43     		bics	r3, r1
+ 621 000a 1360     		str	r3, [r2]
+ 622              	.LVL37:
+ 623              		.loc 4 1780 3 is_stmt 0 view .LVU145
+ 624              	.LBE33:
+ 625              	.LBE32:
+ 171:Core/Src/main.c **** 
+ 626              		.loc 1 171 1 is_stmt 1 view .LVU146
+ 627              	.L36:
+ 171:Core/Src/main.c **** 
+ 628              		.loc 1 171 53 discriminator 2 view .LVU147
+ 171:Core/Src/main.c **** 
+ 629              		.loc 1 171 29 discriminator 2 view .LVU148
+ 630              	.LBB34:
+ 631              	.LBI34:
 1781:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** }
 1782:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** 
 1783:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** /**
@@ -3407,28 +3702,28 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1788:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   *         @arg @ref LL_FLASH_LATENCY_1
 1789:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   */
 1790:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** __STATIC_INLINE uint32_t LL_FLASH_GetLatency(void)
- 457              		.loc 4 1790 26 view .LVU100
- 458              	.LBB34:
+ 632              		.loc 4 1790 26 view .LVU149
+ 633              	.LBB35:
 1791:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h **** {
 1792:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_system.h ****   return (uint32_t)(READ_BIT(FLASH->ACR, FLASH_ACR_LATENCY));
- 459              		.loc 4 1792 3 view .LVU101
- 460              		.loc 4 1792 21 is_stmt 0 view .LVU102
- 461 000c 174B     		ldr	r3, .L35
- 462 000e 1B68     		ldr	r3, [r3]
- 463              	.LBE34:
- 464              	.LBE33:
- 105:Core/Src/main.c ****     
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 58
+ 634              		.loc 4 1792 3 view .LVU150
+ 635              		.loc 4 1792 21 is_stmt 0 view .LVU151
+ 636 000c 174B     		ldr	r3, .L43
+ 637 000e 1B68     		ldr	r3, [r3]
+ 638              	.LBE35:
+ 639              	.LBE34:
+ 171:Core/Src/main.c **** 
+ 640              		.loc 1 171 29 discriminator 2 view .LVU152
+ 641 0010 DB07     		lsls	r3, r3, #31
+ 642 0012 FBD4     		bmi	.L36
+ 173:Core/Src/main.c **** while(LL_RCC_HSI_IsReady() != 1) {}
+ 643              		.loc 1 173 1 is_stmt 1 view .LVU153
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 63
 
 
- 465              		.loc 1 105 33 discriminator 2 view .LVU103
- 466 0010 DB07     		lsls	r3, r3, #31
- 467 0012 FBD4     		bmi	.L28
- 107:Core/Src/main.c ****     while(LL_RCC_HSI_IsReady() != 1) {}
- 468              		.loc 1 107 5 is_stmt 1 view .LVU104
- 469              	.LBB35:
- 470              	.LBI35:
- 471              		.file 5 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h"
+ 644              	.LBB36:
+ 645              	.LBI36:
+ 646              		.file 5 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h"
    1:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
    2:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   ******************************************************************************
    3:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @file    stm32f0xx_ll_rcc.h
@@ -3478,14 +3773,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
   47:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_PPRE1      (uint32_t)8U  /*!< field position in register RCC_CFGR */
   48:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_PLLMUL     (uint32_t)18U /*!< field position in register RCC_CFGR */
   49:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_HSICAL     (uint32_t)8U  /*!< field position in register RCC_CR */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 59
-
-
   50:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_HSITRIM    (uint32_t)3U  /*!< field position in register RCC_CR */
   51:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_HSI14TRIM  (uint32_t)3U  /*!< field position in register RCC_CR2 */
   52:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_HSI14CAL   (uint32_t)8U  /*!< field position in register RCC_CR2 */
   53:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if defined(RCC_HSI48_SUPPORT)
   54:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_HSI48CAL   (uint32_t)24U /*!< field position in register RCC_CR2 */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 64
+
+
   55:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #endif /* RCC_HSI48_SUPPORT */
   56:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_USART1SW   (uint32_t)0U  /*!< field position in register RCC_CFGR3 */
   57:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define RCC_POSITION_USART2SW   (uint32_t)16U /*!< field position in register RCC_CFGR3 */
@@ -3538,14 +3833,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  104:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
  105:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  106:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 60
-
-
  107:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EC_OSC_VALUES Oscillator Values adaptation
  108:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @brief    Defines used to adapt values of different oscillators
  109:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @note     These values could be modified in the user environment according to
  110:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *           HW set-up.
  111:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 65
+
+
  112:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  113:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if !defined  (HSE_VALUE)
  114:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define HSE_VALUE    8000000U  /*!< Value of the HSE oscillator in Hz */
@@ -3598,14 +3893,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  161:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CIR_LSERDYF                RCC_CIR_LSERDYF     /*!< LSE Ready Interrupt flag */
  162:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CIR_HSIRDYF                RCC_CIR_HSIRDYF     /*!< HSI Ready Interrupt flag */
  163:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CIR_HSERDYF                RCC_CIR_HSERDYF     /*!< HSE Ready Interrupt flag */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 61
-
-
  164:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CIR_PLLRDYF                RCC_CIR_PLLRDYF     /*!< PLL Ready Interrupt flag */
  165:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CIR_HSI14RDYF               RCC_CIR_HSI14RDYF  /*!< HSI14 Ready Interrupt flag */
  166:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if defined(RCC_HSI48_SUPPORT)
  167:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CIR_HSI48RDYF               RCC_CIR_HSI48RDYF  /*!< HSI48 Ready Interrupt flag */
  168:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #endif /* RCC_HSI48_SUPPORT */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 66
+
+
  169:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CIR_CSSF                   RCC_CIR_CSSF       /*!< Clock Security System Interrupt f
  170:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CSR_OBLRSTF                RCC_CSR_OBLRSTF         /*!< OBL reset flag */
  171:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_CSR_PINRSTF                RCC_CSR_PINRSTF         /*!< PIN reset flag */
@@ -3658,14 +3953,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  218:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if defined(RCC_CFGR_SW_HSI48)
  219:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_SYS_CLKSOURCE_HSI48         RCC_CFGR_SW_HSI48  /*!< HSI48 selection as system clock 
  220:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #endif /* RCC_CFGR_SW_HSI48 */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 62
-
-
  221:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  222:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  223:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  224:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  225:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EC_SYS_CLKSOURCE_STATUS  System clock switch status
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 67
+
+
  226:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
  227:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  228:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_SYS_CLKSOURCE_STATUS_HSI    RCC_CFGR_SWS_HSI   /*!< HSI used as system clock */
@@ -3718,14 +4013,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  275:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_MCO1SOURCE_LSE              RCC_CFGR_MCOSEL_LSE          /*!< LSE selection as MCO s
  276:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if defined(RCC_CFGR_MCOSEL_HSI48)
  277:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_MCO1SOURCE_HSI48            RCC_CFGR_MCOSEL_HSI48        /*!< HSI48 selection as MCO
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 63
-
-
  278:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #endif /* RCC_CFGR_MCOSEL_HSI48 */
  279:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_MCO1SOURCE_PLLCLK_DIV_2     RCC_CFGR_MCOSEL_PLL_DIV2     /*!< PLL clock divided by 2
  280:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if defined(RCC_CFGR_PLLNODIV)
  281:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_MCO1SOURCE_PLLCLK           (RCC_CFGR_MCOSEL_PLL_DIV2 | RCC_CFGR_PLLNODIV) /*!< PLL 
  282:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #endif /* RCC_CFGR_PLLNODIV */
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 68
+
+
  283:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  284:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  285:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
@@ -3778,14 +4073,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  332:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_USART3_CLKSOURCE_HSI        (uint32_t)((RCC_POSITION_USART3SW << 24) | RCC_CFGR3_USA
  333:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #endif /* RCC_CFGR3_USART3SW */
  334:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 64
-
-
  335:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  336:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  337:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  338:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EC_I2C1_CLKSOURCE Peripheral I2C clock source selection
  339:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 69
+
+
  340:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  341:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_I2C1_CLKSOURCE_HSI          RCC_CFGR3_I2C1SW_HSI    /*!< HSI oscillator clock used a
  342:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_I2C1_CLKSOURCE_SYSCLK       RCC_CFGR3_I2C1SW_SYSCLK /*!< System clock selected as I2
@@ -3838,14 +4133,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  389:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EC_I2C1 Peripheral I2C get clock source
  390:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
  391:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 65
-
-
  392:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_I2C1_CLKSOURCE              RCC_CFGR3_I2C1SW     /*!< I2C1 Clock source selection */
  393:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  394:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  395:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  396:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 70
+
+
  397:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if defined(CEC)
  398:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EC_CEC Peripheral CEC get clock source
  399:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
@@ -3898,14 +4193,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  446:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  447:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  448:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 66
-
-
  449:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  450:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EC_PLLSOURCE PLL SOURCE
  451:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
  452:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  453:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_PLLSOURCE_NONE              0x00000000U                                   /*!< No cl
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 71
+
+
  454:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_PLLSOURCE_HSE               RCC_CFGR_PLLSRC_HSE_PREDIV                    /*!< HSE/P
  455:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #if defined(RCC_PLLSRC_PREDIV1_SUPPORT)
  456:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** #define LL_RCC_PLLSOURCE_HSI               RCC_CFGR_PLLSRC_HSI_PREDIV                    /*!< HSI/P
@@ -3958,14 +4253,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  503:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  504:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  505:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 67
-
-
  506:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  507:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  508:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  509:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  510:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /* Exported macro ------------------------------------------------------------*/
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 72
+
+
  511:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_Exported_Macros RCC Exported Macros
  512:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
  513:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
@@ -4018,14 +4313,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  560:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PLL_MUL_14
  561:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PLL_MUL_15
  562:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PLL_MUL_16
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 68
-
-
  563:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @param  __PLLPREDIV__ This parameter can be one of the following values:
  564:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PREDIV_DIV_1
  565:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PREDIV_DIV_2
  566:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PREDIV_DIV_3
  567:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PREDIV_DIV_4
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 73
+
+
  568:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PREDIV_DIV_5
  569:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PREDIV_DIV_6
  570:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_PREDIV_DIV_7
@@ -4078,14 +4373,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  617:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_1
  618:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_2
  619:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_4
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 69
-
-
  620:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_8
  621:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_16
  622:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_64
  623:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_128
  624:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_256
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 74
+
+
  625:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_SYSCLK_DIV_512
  626:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval HCLK clock frequency (in Hz)
  627:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
@@ -4138,14 +4433,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  674:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @note Cannot be disabled in HSE is ready (only by hardware)
  675:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @rmtoll CR           CSSON         LL_RCC_HSE_DisableCSS
  676:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval None
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 70
-
-
  677:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  678:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE void LL_RCC_HSE_DisableCSS(void)
  679:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
  680:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   CLEAR_BIT(RCC->CR, RCC_CR_CSSON);
  681:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 75
+
+
  682:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  683:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  684:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @brief  Enable HSE external oscillator (HSE Bypass)
@@ -4198,14 +4493,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  731:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
  732:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  733:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 71
-
-
  734:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  735:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  736:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  737:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EF_HSI HSI
  738:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 76
+
+
  739:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  740:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  741:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
@@ -4214,27 +4509,27 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  744:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval None
  745:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  746:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE void LL_RCC_HSI_Enable(void)
- 472              		.loc 5 746 22 view .LVU105
- 473              	.LBB36:
+ 647              		.loc 5 746 22 view .LVU154
+ 648              	.LBB37:
  747:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
  748:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   SET_BIT(RCC->CR, RCC_CR_HSION);
- 474              		.loc 5 748 3 view .LVU106
- 475 0014 164A     		ldr	r2, .L35+4
- 476 0016 1368     		ldr	r3, [r2]
- 477 0018 0121     		movs	r1, #1
- 478 001a 0B43     		orrs	r3, r1
- 479 001c 1360     		str	r3, [r2]
- 480              	.LBE36:
- 481              	.LBE35:
- 108:Core/Src/main.c ****     
- 482              		.loc 1 108 5 view .LVU107
- 483              	.L29:
- 108:Core/Src/main.c ****     
- 484              		.loc 1 108 39 discriminator 2 view .LVU108
- 108:Core/Src/main.c ****     
- 485              		.loc 1 108 32 discriminator 2 view .LVU109
- 486              	.LBB37:
- 487              	.LBI37:
+ 649              		.loc 5 748 3 view .LVU155
+ 650 0014 164A     		ldr	r2, .L43+4
+ 651 0016 1368     		ldr	r3, [r2]
+ 652 0018 0121     		movs	r1, #1
+ 653 001a 0B43     		orrs	r3, r1
+ 654 001c 1360     		str	r3, [r2]
+ 655              	.LBE37:
+ 656              	.LBE36:
+ 174:Core/Src/main.c **** 
+ 657              		.loc 1 174 1 view .LVU156
+ 658              	.L37:
+ 174:Core/Src/main.c **** 
+ 659              		.loc 1 174 35 discriminator 2 view .LVU157
+ 174:Core/Src/main.c **** 
+ 660              		.loc 1 174 28 discriminator 2 view .LVU158
+ 661              	.LBB38:
+ 662              	.LBI38:
  749:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
  750:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  751:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
@@ -4253,28 +4548,28 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  764:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval State of bit (1 or 0).
  765:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  766:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE uint32_t LL_RCC_HSI_IsReady(void)
- 488              		.loc 5 766 26 view .LVU110
- 489              	.LBB38:
+ 663              		.loc 5 766 26 view .LVU159
+ 664              	.LBB39:
  767:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
  768:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   return (READ_BIT(RCC->CR, RCC_CR_HSIRDY) == (RCC_CR_HSIRDY));
- 490              		.loc 5 768 3 view .LVU111
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 72
+ 665              		.loc 5 768 3 view .LVU160
+ 666              		.loc 5 768 11 is_stmt 0 view .LVU161
+ 667 001e 144B     		ldr	r3, .L43+4
+ 668 0020 1B68     		ldr	r3, [r3]
+ 669              	.LBE39:
+ 670              	.LBE38:
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 77
 
 
- 491              		.loc 5 768 11 is_stmt 0 view .LVU112
- 492 001e 144B     		ldr	r3, .L35+4
- 493 0020 1B68     		ldr	r3, [r3]
- 494              	.LBE38:
- 495              	.LBE37:
- 108:Core/Src/main.c ****     
- 496              		.loc 1 108 32 discriminator 2 view .LVU113
- 497 0022 9B07     		lsls	r3, r3, #30
- 498 0024 FBD5     		bpl	.L29
- 110:Core/Src/main.c ****     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
- 499              		.loc 1 110 5 is_stmt 1 view .LVU114
- 500              	.LVL22:
- 501              	.LBB39:
- 502              	.LBI39:
+ 174:Core/Src/main.c **** 
+ 671              		.loc 1 174 28 discriminator 2 view .LVU162
+ 672 0022 9B07     		lsls	r3, r3, #30
+ 673 0024 FBD5     		bpl	.L37
+ 176:Core/Src/main.c **** LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+ 674              		.loc 1 176 1 is_stmt 1 view .LVU163
+ 675              	.LVL38:
+ 676              	.LBB40:
+ 677              	.LBI40:
  769:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
  770:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  771:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
@@ -4299,33 +4594,33 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  790:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval None
  791:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  792:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE void LL_RCC_HSI_SetCalibTrimming(uint32_t Value)
- 503              		.loc 5 792 22 view .LVU115
- 504              	.LBB40:
+ 678              		.loc 5 792 22 view .LVU164
+ 679              	.LBB41:
  793:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
  794:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   MODIFY_REG(RCC->CR, RCC_CR_HSITRIM, Value << RCC_CR_HSITRIM_Pos);
- 505              		.loc 5 794 3 view .LVU116
- 506 0026 124B     		ldr	r3, .L35+4
- 507 0028 1A68     		ldr	r2, [r3]
- 508 002a F821     		movs	r1, #248
- 509 002c 8A43     		bics	r2, r1
- 510 002e 7839     		subs	r1, r1, #120
- 511 0030 0A43     		orrs	r2, r1
- 512 0032 1A60     		str	r2, [r3]
- 513              	.LVL23:
- 514              		.loc 5 794 3 is_stmt 0 view .LVU117
- 515              	.LBE40:
- 516              	.LBE39:
- 111:Core/Src/main.c ****     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
- 517              		.loc 1 111 5 is_stmt 1 view .LVU118
- 518              	.LBB41:
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 73
-
-
- 519              	.LBI41:
+ 680              		.loc 5 794 3 view .LVU165
+ 681 0026 124B     		ldr	r3, .L43+4
+ 682 0028 1A68     		ldr	r2, [r3]
+ 683 002a F821     		movs	r1, #248
+ 684 002c 8A43     		bics	r2, r1
+ 685 002e 7839     		subs	r1, r1, #120
+ 686 0030 0A43     		orrs	r2, r1
+ 687 0032 1A60     		str	r2, [r3]
+ 688              	.LVL39:
+ 689              		.loc 5 794 3 is_stmt 0 view .LVU166
+ 690              	.LBE41:
+ 691              	.LBE40:
+ 177:Core/Src/main.c **** LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+ 692              		.loc 1 177 1 is_stmt 1 view .LVU167
+ 693              	.LBB42:
+ 694              	.LBI42:
  795:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
  796:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  797:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  798:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @brief  Get HSI Calibration trimming
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 78
+
+
  799:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @rmtoll CR        HSITRIM       LL_RCC_HSI_GetCalibTrimming
  800:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval Between Min_Data = 0x00 and Max_Data = 0x1F
  801:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
@@ -4378,14 +4673,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  848:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @rmtoll CR2          HSI48CAL      LL_RCC_HSI48_GetCalibration
  849:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval Between Min_Data = 0x00 and Max_Data = 0xFF
  850:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 74
-
-
  851:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE uint32_t LL_RCC_HSI48_GetCalibration(void)
  852:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
  853:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   return (uint32_t)(READ_BIT(RCC->CR2, RCC_CR2_HSI48CAL) >> RCC_POSITION_HSI48CAL);
  854:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
  855:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 79
+
+
  856:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  857:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
  858:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
@@ -4438,14 +4733,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  905:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
  906:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  907:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @brief  ADC interface can not turn on the HSI14 oscillator
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 75
-
-
  908:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @rmtoll CR2          HSI14DIS      LL_RCC_HSI14_DisableADCControl
  909:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval None
  910:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
  911:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE void LL_RCC_HSI14_DisableADCControl(void)
  912:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 80
+
+
  913:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   SET_BIT(RCC->CR2, RCC_CR2_HSI14DIS);
  914:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
  915:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
@@ -4498,14 +4793,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
  962:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @rmtoll BDCR         LSEON         LL_RCC_LSE_Enable
  963:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval None
  964:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 76
-
-
  965:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE void LL_RCC_LSE_Enable(void)
  966:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
  967:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   SET_BIT(RCC->BDCR, RCC_BDCR_LSEON);
  968:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
  969:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 81
+
+
  970:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
  971:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @brief  Disable  Low Speed External (LSE) crystal.
  972:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @rmtoll BDCR         LSEON         LL_RCC_LSE_Disable
@@ -4558,14 +4853,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1019:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval Returned value can be one of the following values:
 1020:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_LSEDRIVE_LOW
 1021:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_LSEDRIVE_MEDIUMLOW
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 77
-
-
 1022:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_LSEDRIVE_MEDIUMHIGH
 1023:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   *         @arg @ref LL_RCC_LSEDRIVE_HIGH
 1024:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
 1025:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE uint32_t LL_RCC_LSE_GetDriveCapability(void)
 1026:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 82
+
+
 1027:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   return (uint32_t)(READ_BIT(RCC->BDCR, RCC_BDCR_LSEDRV));
 1028:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
 1029:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
@@ -4618,14 +4913,14 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1076:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
 1077:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
 1078:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 78
-
-
 1079:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @}
 1080:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
 1081:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
 1082:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /** @defgroup RCC_LL_EF_System System
 1083:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @{
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 83
+
+
 1084:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
 1085:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
 1086:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
@@ -4677,26 +4972,26 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1132:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval None
 1133:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
 1134:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE void LL_RCC_SetAHBPrescaler(uint32_t Prescaler)
- 520              		.loc 5 1134 22 view .LVU119
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 79
-
-
- 521              	.LBB42:
+ 695              		.loc 5 1134 22 view .LVU168
+ 696              	.LBB43:
 1135:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
 1136:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   MODIFY_REG(RCC->CFGR, RCC_CFGR_HPRE, Prescaler);
- 522              		.loc 5 1136 3 view .LVU120
- 523 0034 5A68     		ldr	r2, [r3, #4]
- 524 0036 7031     		adds	r1, r1, #112
- 525 0038 8A43     		bics	r2, r1
- 526 003a 5A60     		str	r2, [r3, #4]
- 527              	.LVL24:
- 528              		.loc 5 1136 3 is_stmt 0 view .LVU121
- 529              	.LBE42:
- 530              	.LBE41:
- 112:Core/Src/main.c ****     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
- 531              		.loc 1 112 5 is_stmt 1 view .LVU122
- 532              	.LBB43:
- 533              	.LBI43:
+ 697              		.loc 5 1136 3 view .LVU169
+ 698 0034 5A68     		ldr	r2, [r3, #4]
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 84
+
+
+ 699 0036 7031     		adds	r1, r1, #112
+ 700 0038 8A43     		bics	r2, r1
+ 701 003a 5A60     		str	r2, [r3, #4]
+ 702              	.LVL40:
+ 703              		.loc 5 1136 3 is_stmt 0 view .LVU170
+ 704              	.LBE43:
+ 705              	.LBE42:
+ 178:Core/Src/main.c **** LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
+ 706              		.loc 1 178 1 is_stmt 1 view .LVU171
+ 707              	.LBB44:
+ 708              	.LBI44:
 1137:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
 1138:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** 
 1139:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** /**
@@ -4711,289 +5006,330 @@ ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 1
 1148:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   * @retval None
 1149:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   */
 1150:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** __STATIC_INLINE void LL_RCC_SetAPB1Prescaler(uint32_t Prescaler)
- 534              		.loc 5 1150 22 view .LVU123
- 535              	.LBB44:
+ 709              		.loc 5 1150 22 view .LVU172
+ 710              	.LBB45:
 1151:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
 1152:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h ****   MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE, Prescaler);
- 536              		.loc 5 1152 3 view .LVU124
- 537 003c 5A68     		ldr	r2, [r3, #4]
- 538 003e 0D49     		ldr	r1, .L35+8
- 539 0040 0A40     		ands	r2, r1
- 540 0042 5A60     		str	r2, [r3, #4]
- 541              	.LVL25:
- 542              		.loc 5 1152 3 is_stmt 0 view .LVU125
- 543              	.LBE44:
- 544              	.LBE43:
- 113:Core/Src/main.c ****     while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI) {}
- 545              		.loc 1 113 5 is_stmt 1 view .LVU126
- 546              	.LBB45:
- 547              	.LBI45:
+ 711              		.loc 5 1152 3 view .LVU173
+ 712 003c 5A68     		ldr	r2, [r3, #4]
+ 713 003e 0D49     		ldr	r1, .L43+8
+ 714 0040 0A40     		ands	r2, r1
+ 715 0042 5A60     		str	r2, [r3, #4]
+ 716              	.LVL41:
+ 717              		.loc 5 1152 3 is_stmt 0 view .LVU174
+ 718              	.LBE45:
+ 719              	.LBE44:
+ 179:Core/Src/main.c **** while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI) {}
+ 720              		.loc 1 179 1 is_stmt 1 view .LVU175
+ 721              	.LBB46:
+ 722              	.LBI46:
 1098:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
- 548              		.loc 5 1098 22 view .LVU127
- 549              	.LBB46:
+ 723              		.loc 5 1098 22 view .LVU176
+ 724              	.LBB47:
 1100:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
- 550              		.loc 5 1100 3 view .LVU128
- 551 0044 5A68     		ldr	r2, [r3, #4]
- 552 0046 0321     		movs	r1, #3
- 553 0048 8A43     		bics	r2, r1
- 554 004a 5A60     		str	r2, [r3, #4]
- 555              	.LVL26:
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 80
+ 725              		.loc 5 1100 3 view .LVU177
+ 726 0044 5A68     		ldr	r2, [r3, #4]
+ 727 0046 0321     		movs	r1, #3
+ 728 0048 8A43     		bics	r2, r1
+ 729 004a 5A60     		str	r2, [r3, #4]
+ 730              	.LVL42:
+1100:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
+ 731              		.loc 5 1100 3 is_stmt 0 view .LVU178
+ 732              	.LBE47:
+ 733              	.LBE46:
+ 180:Core/Src/main.c **** 
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 85
 
 
-1100:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
- 556              		.loc 5 1100 3 is_stmt 0 view .LVU129
- 557              	.LBE46:
- 558              	.LBE45:
- 114:Core/Src/main.c ****     
- 559              		.loc 1 114 5 is_stmt 1 view .LVU130
- 560              	.L30:
- 114:Core/Src/main.c ****     
- 561              		.loc 1 114 73 discriminator 2 view .LVU131
- 114:Core/Src/main.c ****     
- 562              		.loc 1 114 36 discriminator 2 view .LVU132
- 563              	.LBB47:
- 564              	.LBI47:
+ 734              		.loc 1 180 1 is_stmt 1 view .LVU179
+ 735              	.L38:
+ 180:Core/Src/main.c **** 
+ 736              		.loc 1 180 69 discriminator 2 view .LVU180
+ 180:Core/Src/main.c **** 
+ 737              		.loc 1 180 32 discriminator 2 view .LVU181
+ 738              	.LBB48:
+ 739              	.LBI48:
 1114:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** {
- 565              		.loc 5 1114 26 view .LVU133
- 566              	.LBB48:
+ 740              		.loc 5 1114 26 view .LVU182
+ 741              	.LBB49:
 1116:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
- 567              		.loc 5 1116 3 view .LVU134
+ 742              		.loc 5 1116 3 view .LVU183
 1116:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
- 568              		.loc 5 1116 21 is_stmt 0 view .LVU135
- 569 004c 084B     		ldr	r3, .L35+4
- 570 004e 5B68     		ldr	r3, [r3, #4]
+ 743              		.loc 5 1116 21 is_stmt 0 view .LVU184
+ 744 004c 084B     		ldr	r3, .L43+4
+ 745 004e 5B68     		ldr	r3, [r3, #4]
 1116:Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_rcc.h **** }
- 571              		.loc 5 1116 10 view .LVU136
- 572 0050 0C22     		movs	r2, #12
- 573              	.LBE48:
- 574              	.LBE47:
- 114:Core/Src/main.c ****     
- 575              		.loc 1 114 36 discriminator 2 view .LVU137
- 576 0052 1A42     		tst	r2, r3
- 577 0054 FAD1     		bne	.L30
- 116:Core/Src/main.c ****     
- 578              		.loc 1 116 5 is_stmt 1 view .LVU138
- 579 0056 0848     		ldr	r0, .L35+12
- 580 0058 FFF7FEFF 		bl	LL_SetSystemCoreClock
- 581              	.LVL27:
- 118:Core/Src/main.c ****         Error_Handler();
- 582              		.loc 1 118 5 view .LVU139
- 118:Core/Src/main.c ****         Error_Handler();
- 583              		.loc 1 118 9 is_stmt 0 view .LVU140
- 584 005c 0320     		movs	r0, #3
- 585 005e FFF7FEFF 		bl	HAL_InitTick
- 586              	.LVL28:
- 118:Core/Src/main.c ****         Error_Handler();
- 587              		.loc 1 118 8 discriminator 1 view .LVU141
- 588 0062 0028     		cmp	r0, #0
- 589 0064 00D1     		bne	.L34
- 121:Core/Src/main.c **** 
- 590              		.loc 1 121 1 view .LVU142
- 591              		@ sp needed
- 592 0066 10BD     		pop	{r4, pc}
- 593              	.L34:
- 119:Core/Src/main.c ****     }
- 594              		.loc 1 119 9 is_stmt 1 view .LVU143
- 595 0068 FFF7FEFF 		bl	Error_Handler
- 596              	.LVL29:
- 597              	.L36:
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 81
+ 746              		.loc 5 1116 10 view .LVU185
+ 747 0050 0C22     		movs	r2, #12
+ 748              	.LBE49:
+ 749              	.LBE48:
+ 180:Core/Src/main.c **** 
+ 750              		.loc 1 180 32 discriminator 2 view .LVU186
+ 751 0052 1A42     		tst	r2, r3
+ 752 0054 FAD1     		bne	.L38
+ 182:Core/Src/main.c **** if (HAL_InitTick(TICK_INT_PRIORITY) != HAL_OK) {
+ 753              		.loc 1 182 1 is_stmt 1 view .LVU187
+ 754 0056 0848     		ldr	r0, .L43+12
+ 755 0058 FFF7FEFF 		bl	LL_SetSystemCoreClock
+ 756              	.LVL43:
+ 183:Core/Src/main.c **** Error_Handler();
+ 757              		.loc 1 183 1 view .LVU188
+ 183:Core/Src/main.c **** Error_Handler();
+ 758              		.loc 1 183 5 is_stmt 0 view .LVU189
+ 759 005c 0320     		movs	r0, #3
+ 760 005e FFF7FEFF 		bl	HAL_InitTick
+ 761              	.LVL44:
+ 183:Core/Src/main.c **** Error_Handler();
+ 762              		.loc 1 183 4 discriminator 1 view .LVU190
+ 763 0062 0028     		cmp	r0, #0
+ 764 0064 00D1     		bne	.L42
+ 186:Core/Src/main.c **** 
+ 765              		.loc 1 186 1 view .LVU191
+ 766              		@ sp needed
+ 767 0066 10BD     		pop	{r4, pc}
+ 768              	.L42:
+ 184:Core/Src/main.c **** }
+ 769              		.loc 1 184 1 is_stmt 1 view .LVU192
+ 770 0068 FFF7FEFF 		bl	Error_Handler
+ 771              	.LVL45:
+ 772              	.L44:
+ 773              		.align	2
+ 774              	.L43:
+ 775 006c 00200240 		.word	1073881088
+ 776 0070 00100240 		.word	1073876992
+ 777 0074 FFF8FFFF 		.word	-1793
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 86
 
 
- 598              		.align	2
- 599              	.L35:
- 600 006c 00200240 		.word	1073881088
- 601 0070 00100240 		.word	1073876992
- 602 0074 FFF8FFFF 		.word	-1793
- 603 0078 00127A00 		.word	8000000
- 604              		.cfi_endproc
- 605              	.LFE346:
- 607              		.section	.text.main,"ax",%progbits
- 608              		.align	1
- 609              		.global	main
- 610              		.syntax unified
- 611              		.code	16
- 612              		.thumb_func
- 614              	main:
- 615              	.LFB345:
-  72:Core/Src/main.c ****     HAL_Init();
- 616              		.loc 1 72 1 view -0
- 617              		.cfi_startproc
- 618              		@ Volatile: function does not return.
- 619              		@ args = 0, pretend = 0, frame = 0
- 620              		@ frame_needed = 0, uses_anonymous_args = 0
- 621 0000 10B5     		push	{r4, lr}
- 622              		.cfi_def_cfa_offset 8
- 623              		.cfi_offset 4, -8
- 624              		.cfi_offset 14, -4
-  73:Core/Src/main.c ****     SystemClock_Config();
- 625              		.loc 1 73 5 view .LVU145
- 626 0002 FFF7FEFF 		bl	HAL_Init
- 627              	.LVL30:
-  74:Core/Src/main.c ****     MX_GPIO_Init();
- 628              		.loc 1 74 5 view .LVU146
- 629 0006 FFF7FEFF 		bl	SystemClock_Config
- 630              	.LVL31:
-  75:Core/Src/main.c ****     MX_TIM16_Init();
- 631              		.loc 1 75 5 view .LVU147
- 632 000a FFF7FEFF 		bl	MX_GPIO_Init
- 633              	.LVL32:
-  76:Core/Src/main.c **** 
- 634              		.loc 1 76 5 view .LVU148
- 635 000e FFF7FEFF 		bl	MX_TIM16_Init
- 636              	.LVL33:
-  80:Core/Src/main.c **** 
- 637              		.loc 1 80 5 view .LVU149
- 638 0012 FFF7FEFF 		bl	turn_off_all_leds
- 639              	.LVL34:
-  83:Core/Src/main.c ****     /* USER CODE END 2 */
- 640              		.loc 1 83 5 view .LVU150
- 641 0016 0648     		ldr	r0, .L40
- 642 0018 FFF7FEFF 		bl	HAL_TIM_Base_Start_IT
- 643              	.LVL35:
- 644              	.L38:
-  86:Core/Src/main.c ****     {
- 645              		.loc 1 86 5 view .LVU151
-  91:Core/Src/main.c ****           timer_event = 0;
- 646              		.loc 1 91 9 view .LVU152
-  91:Core/Src/main.c ****           timer_event = 0;
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 82
+ 778 0078 00127A00 		.word	8000000
+ 779              		.cfi_endproc
+ 780              	.LFE348:
+ 782              		.section	.text.main,"ax",%progbits
+ 783              		.align	1
+ 784              		.global	main
+ 785              		.syntax unified
+ 786              		.code	16
+ 787              		.thumb_func
+ 789              	main:
+ 790              	.LFB347:
+ 134:Core/Src/main.c **** HAL_Init();
+ 791              		.loc 1 134 1 view -0
+ 792              		.cfi_startproc
+ 793              		@ Volatile: function does not return.
+ 794              		@ args = 0, pretend = 0, frame = 0
+ 795              		@ frame_needed = 0, uses_anonymous_args = 0
+ 796 0000 10B5     		push	{r4, lr}
+ 797              		.cfi_def_cfa_offset 8
+ 798              		.cfi_offset 4, -8
+ 799              		.cfi_offset 14, -4
+ 135:Core/Src/main.c **** SystemClock_Config();
+ 800              		.loc 1 135 1 view .LVU194
+ 801 0002 FFF7FEFF 		bl	HAL_Init
+ 802              	.LVL46:
+ 136:Core/Src/main.c **** 
+ 803              		.loc 1 136 1 view .LVU195
+ 804 0006 FFF7FEFF 		bl	SystemClock_Config
+ 805              	.LVL47:
+ 138:Core/Src/main.c **** MX_TIM16_Init();
+ 806              		.loc 1 138 1 view .LVU196
+ 807 000a FFF7FEFF 		bl	MX_GPIO_Init
+ 808              	.LVL48:
+ 139:Core/Src/main.c **** 
+ 809              		.loc 1 139 1 view .LVU197
+ 810 000e FFF7FEFF 		bl	MX_TIM16_Init
+ 811              	.LVL49:
+ 142:Core/Src/main.c **** 
+ 812              		.loc 1 142 1 view .LVU198
+ 813 0012 FFF7FEFF 		bl	turn_off_all_leds
+ 814              	.LVL50:
+ 145:Core/Src/main.c **** HAL_TIM_Base_Start_IT(&htim16);
+ 815              		.loc 1 145 1 view .LVU199
+ 816 0016 FA20     		movs	r0, #250
+ 817 0018 8000     		lsls	r0, r0, #2
+ 818 001a FFF7FEFF 		bl	change_timer_period
+ 819              	.LVL51:
+ 146:Core/Src/main.c **** /* USER CODE END 2 */
+ 820              		.loc 1 146 1 view .LVU200
+ 821 001e 0748     		ldr	r0, .L48
+ 822 0020 FFF7FEFF 		bl	HAL_TIM_Base_Start_IT
+ 823              	.LVL52:
+ 824              	.L46:
+ 149:Core/Src/main.c **** {
+ 825              		.loc 1 149 1 view .LVU201
+ 153:Core/Src/main.c **** 
+ 826              		.loc 1 153 1 view .LVU202
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 87
 
 
- 647              		.loc 1 91 12 is_stmt 0 view .LVU153
- 648 001c 054B     		ldr	r3, .L40+4
- 649 001e 1B78     		ldrb	r3, [r3]
-  91:Core/Src/main.c ****           timer_event = 0;
- 650              		.loc 1 91 11 view .LVU154
- 651 0020 002B     		cmp	r3, #0
- 652 0022 FBD0     		beq	.L38
-  92:Core/Src/main.c ****           update_led_pattern();
- 653              		.loc 1 92 11 is_stmt 1 view .LVU155
-  92:Core/Src/main.c ****           update_led_pattern();
- 654              		.loc 1 92 23 is_stmt 0 view .LVU156
- 655 0024 034B     		ldr	r3, .L40+4
- 656 0026 0022     		movs	r2, #0
- 657 0028 1A70     		strb	r2, [r3]
-  93:Core/Src/main.c ****         }
- 658              		.loc 1 93 11 is_stmt 1 view .LVU157
- 659 002a FFF7FEFF 		bl	update_led_pattern
- 660              	.LVL36:
- 661 002e F5E7     		b	.L38
- 662              	.L41:
- 663              		.align	2
- 664              	.L40:
- 665 0030 00000000 		.word	htim16
- 666 0034 00000000 		.word	timer_event
- 667              		.cfi_endproc
- 668              	.LFE345:
- 670              		.global	led_pins
- 671              		.section	.data.led_pins,"aw"
- 672              		.align	2
- 675              	led_pins:
- 676 0000 0100     		.short	1
- 677 0002 0200     		.short	2
- 678 0004 0400     		.short	4
- 679 0006 0800     		.short	8
- 680 0008 1000     		.short	16
- 681 000a 2000     		.short	32
- 682 000c 4000     		.short	64
- 683 000e 8000     		.short	128
- 684              		.global	led_ports
- 685              		.section	.data.led_ports,"aw"
- 686              		.align	2
- 689              	led_ports:
- 690 0000 00040048 		.word	1207960576
- 691 0004 00040048 		.word	1207960576
- 692 0008 00040048 		.word	1207960576
- 693 000c 00040048 		.word	1207960576
- 694 0010 00040048 		.word	1207960576
- 695 0014 00040048 		.word	1207960576
- 696 0018 00040048 		.word	1207960576
- 697 001c 00040048 		.word	1207960576
- 698              		.global	direction
- 699              		.section	.data.direction,"aw"
- 702              	direction:
- 703 0000 01       		.byte	1
- 704              		.global	current_led
- 705              		.section	.bss.current_led,"aw",%nobits
- 708              	current_led:
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 83
+ 827 0024 FFF7FEFF 		bl	handle_button_press
+ 828              	.LVL53:
+ 156:Core/Src/main.c ****   timer_event = 0;
+ 829              		.loc 1 156 1 view .LVU203
+ 156:Core/Src/main.c ****   timer_event = 0;
+ 830              		.loc 1 156 5 is_stmt 0 view .LVU204
+ 831 0028 054B     		ldr	r3, .L48+4
+ 832 002a 1B78     		ldrb	r3, [r3]
+ 156:Core/Src/main.c ****   timer_event = 0;
+ 833              		.loc 1 156 4 view .LVU205
+ 834 002c 002B     		cmp	r3, #0
+ 835 002e F9D0     		beq	.L46
+ 157:Core/Src/main.c ****   update_led_pattern();
+ 836              		.loc 1 157 3 is_stmt 1 view .LVU206
+ 157:Core/Src/main.c ****   update_led_pattern();
+ 837              		.loc 1 157 15 is_stmt 0 view .LVU207
+ 838 0030 034B     		ldr	r3, .L48+4
+ 839 0032 0022     		movs	r2, #0
+ 840 0034 1A70     		strb	r2, [r3]
+ 158:Core/Src/main.c **** }
+ 841              		.loc 1 158 3 is_stmt 1 view .LVU208
+ 842 0036 FFF7FEFF 		bl	update_led_pattern
+ 843              	.LVL54:
+ 844 003a F3E7     		b	.L46
+ 845              	.L49:
+ 846              		.align	2
+ 847              	.L48:
+ 848 003c 00000000 		.word	htim16
+ 849 0040 00000000 		.word	timer_event
+ 850              		.cfi_endproc
+ 851              	.LFE347:
+ 853              		.global	current_arr
+ 854              		.section	.data.current_arr,"aw"
+ 855              		.align	2
+ 858              	current_arr:
+ 859 0000 E7030000 		.word	999
+ 860              		.global	speed_state
+ 861              		.section	.bss.speed_state,"aw",%nobits
+ 864              	speed_state:
+ 865 0000 00       		.space	1
+ 866              		.global	last_button_press_time
+ 867              		.section	.bss.last_button_press_time,"aw",%nobits
+ 868              		.align	2
+ 871              	last_button_press_time:
+ 872 0000 00000000 		.space	4
+ 873              		.global	led_pins
+ 874              		.section	.data.led_pins,"aw"
+ 875              		.align	2
+ 878              	led_pins:
+ 879 0000 0100     		.short	1
+ 880 0002 0200     		.short	2
+ 881 0004 0400     		.short	4
+ 882 0006 0800     		.short	8
+ 883 0008 1000     		.short	16
+ 884 000a 2000     		.short	32
+ 885 000c 4000     		.short	64
+ 886 000e 8000     		.short	128
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 88
 
 
- 709 0000 00       		.space	1
- 710              		.global	timer_event
- 711              		.section	.bss.timer_event,"aw",%nobits
- 714              	timer_event:
- 715 0000 00       		.space	1
- 716              		.global	htim16
- 717              		.section	.bss.htim16,"aw",%nobits
- 718              		.align	2
- 721              	htim16:
- 722 0000 00000000 		.space	72
- 722      00000000 
- 722      00000000 
- 722      00000000 
- 722      00000000 
- 723              		.text
- 724              	.Letext0:
- 725              		.file 6 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/stm32f051x8.h"
- 726              		.file 7 "C:/Users/fastr/AppData/Roaming/Code/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-to
- 727              		.file 8 "C:/Users/fastr/AppData/Roaming/Code/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-to
- 728              		.file 9 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_def.h"
- 729              		.file 10 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_gpio.h"
- 730              		.file 11 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_dma.h"
- 731              		.file 12 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_tim.h"
- 732              		.file 13 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_utils.h"
- 733              		.file 14 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal.h"
- 734              		.file 15 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_dma.h"
- 735              		.file 16 "<built-in>"
-ARM GAS  C:\Users\fastr\AppData\Local\Temp\cciBytOg.s 			page 84
+ 887              		.global	led_ports
+ 888              		.section	.data.led_ports,"aw"
+ 889              		.align	2
+ 892              	led_ports:
+ 893 0000 00040048 		.word	1207960576
+ 894 0004 00040048 		.word	1207960576
+ 895 0008 00040048 		.word	1207960576
+ 896 000c 00040048 		.word	1207960576
+ 897 0010 00040048 		.word	1207960576
+ 898 0014 00040048 		.word	1207960576
+ 899 0018 00040048 		.word	1207960576
+ 900 001c 00040048 		.word	1207960576
+ 901              		.global	direction
+ 902              		.section	.data.direction,"aw"
+ 905              	direction:
+ 906 0000 01       		.byte	1
+ 907              		.global	current_led
+ 908              		.section	.bss.current_led,"aw",%nobits
+ 911              	current_led:
+ 912 0000 00       		.space	1
+ 913              		.global	timer_event
+ 914              		.section	.bss.timer_event,"aw",%nobits
+ 917              	timer_event:
+ 918 0000 00       		.space	1
+ 919              		.global	htim16
+ 920              		.section	.bss.htim16,"aw",%nobits
+ 921              		.align	2
+ 924              	htim16:
+ 925 0000 00000000 		.space	72
+ 925      00000000 
+ 925      00000000 
+ 925      00000000 
+ 925      00000000 
+ 926              		.text
+ 927              	.Letext0:
+ 928              		.file 6 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/stm32f051x8.h"
+ 929              		.file 7 "C:/Users/fastr/AppData/Roaming/Code/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-to
+ 930              		.file 8 "C:/Users/fastr/AppData/Roaming/Code/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-to
+ 931              		.file 9 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_def.h"
+ 932              		.file 10 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_gpio.h"
+ 933              		.file 11 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_dma.h"
+ 934              		.file 12 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_tim.h"
+ 935              		.file 13 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_utils.h"
+ 936              		.file 14 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal.h"
+ 937              		.file 15 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_ll_dma.h"
+ 938              		.file 16 "<built-in>"
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 89
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 main.c
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:19     .text.MX_GPIO_Init:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:24     .text.MX_GPIO_Init:00000000 MX_GPIO_Init
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:112    .text.MX_GPIO_Init:0000004c $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:675    .data.led_pins:00000000 led_pins
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:689    .data.led_ports:00000000 led_ports
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:119    .text.turn_off_all_leds:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:125    .text.turn_off_all_leds:00000000 turn_off_all_leds
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:172    .text.turn_off_all_leds:00000020 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:178    .text.update_led_pattern:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:184    .text.update_led_pattern:00000000 update_led_pattern
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:249    .text.update_led_pattern:00000044 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:708    .bss.current_led:00000000 current_led
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:702    .data.direction:00000000 direction
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:257    .text.TIM16_IRQHandler:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:263    .text.TIM16_IRQHandler:00000000 TIM16_IRQHandler
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:288    .text.TIM16_IRQHandler:00000010 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:721    .bss.htim16:00000000 htim16
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:714    .bss.timer_event:00000000 timer_event
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:294    .text.Error_Handler:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:300    .text.Error_Handler:00000000 Error_Handler
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:332    .text.MX_TIM16_Init:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:337    .text.MX_TIM16_Init:00000000 MX_TIM16_Init
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:409    .text.MX_TIM16_Init:00000034 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:418    .text.SystemClock_Config:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:424    .text.SystemClock_Config:00000000 SystemClock_Config
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:600    .text.SystemClock_Config:0000006c $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:608    .text.main:00000000 $t
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:614    .text.main:00000000 main
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:665    .text.main:00000030 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:672    .data.led_pins:00000000 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:686    .data.led_ports:00000000 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:709    .bss.current_led:00000000 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:715    .bss.timer_event:00000000 $d
-C:\Users\fastr\AppData\Local\Temp\cciBytOg.s:718    .bss.htim16:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:19     .text.MX_GPIO_Init:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:24     .text.MX_GPIO_Init:00000000 MX_GPIO_Init
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:146    .text.MX_GPIO_Init:00000074 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:878    .data.led_pins:00000000 led_pins
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:892    .data.led_ports:00000000 led_ports
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:153    .text.turn_off_all_leds:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:159    .text.turn_off_all_leds:00000000 turn_off_all_leds
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:206    .text.turn_off_all_leds:00000020 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:212    .text.update_led_pattern:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:218    .text.update_led_pattern:00000000 update_led_pattern
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:283    .text.update_led_pattern:00000044 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:911    .bss.current_led:00000000 current_led
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:905    .data.direction:00000000 direction
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:291    .text.change_timer_period:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:297    .text.change_timer_period:00000000 change_timer_period
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:327    .text.change_timer_period:00000010 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:858    .data.current_arr:00000000 current_arr
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:333    .text.handle_button_press:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:339    .text.handle_button_press:00000000 handle_button_press
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:426    .text.handle_button_press:00000048 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:871    .bss.last_button_press_time:00000000 last_button_press_time
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:864    .bss.speed_state:00000000 speed_state
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:432    .text.TIM16_IRQHandler:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:438    .text.TIM16_IRQHandler:00000000 TIM16_IRQHandler
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:463    .text.TIM16_IRQHandler:00000010 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:924    .bss.htim16:00000000 htim16
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:917    .bss.timer_event:00000000 timer_event
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:469    .text.Error_Handler:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:475    .text.Error_Handler:00000000 Error_Handler
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:507    .text.MX_TIM16_Init:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:512    .text.MX_TIM16_Init:00000000 MX_TIM16_Init
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:584    .text.MX_TIM16_Init:00000034 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:593    .text.SystemClock_Config:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:599    .text.SystemClock_Config:00000000 SystemClock_Config
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:775    .text.SystemClock_Config:0000006c $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:783    .text.main:00000000 $t
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:789    .text.main:00000000 main
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:848    .text.main:0000003c $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:855    .data.current_arr:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:865    .bss.speed_state:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:868    .bss.last_button_press_time:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:875    .data.led_pins:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:889    .data.led_ports:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:912    .bss.current_led:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:918    .bss.timer_event:00000000 $d
+C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s:921    .bss.htim16:00000000 $d
 
 UNDEFINED SYMBOLS
 memset
 HAL_GPIO_Init
 HAL_GPIO_WritePin
+HAL_GetTick
+HAL_GPIO_ReadPin
 HAL_TIM_IRQHandler
 HAL_TIM_Base_Init
+ARM GAS  C:\Users\fastr\AppData\Local\Temp\cchSAUzi.s 			page 90
+
+
 LL_SetSystemCoreClock
 HAL_InitTick
 HAL_Init
