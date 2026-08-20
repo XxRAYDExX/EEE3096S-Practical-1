@@ -28,7 +28,7 @@ uint16_t led_pins[8] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3,
 GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6, GPIO_PIN_7};
 
 // TODO: Define your debounce delay based on your oscilloscope measurement
-#define DEBOUNCE_MS 25
+#define DEBOUNCE_MS 0
 uint32_t last_button_press_time = 0;
 
 // Speed state: 0 = slow (1s), 1 = fast (0.5s)
@@ -96,31 +96,25 @@ current_arr = new_arr;
 
 void handle_button_press(void)
 {
-// TODO: Get the current system tick using HAL_GetTick().
-uint32_t current_time = HAL_GetTick();
+    uint32_t current_time = HAL_GetTick();
+    uint8_t button_pressed = (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET);
+    static uint8_t button_last_state = 0; // Tracks state across function calls
 
-// TODO: Check the time elapsed since the last valid press.
-// Compare the elapsed time against DEBOUNCE_MS.
-uint8_t debounce_passed = ((current_time - last_button_press_time) > DEBOUNCE_MS);
-
-
-// TODO: Read the PA0 button state. The button is active low.
-uint8_t button_pressed = (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == 0);
-
-// TODO: If a valid debounced press occurs:
-if(button_pressed && debounce_passed){
-  // 1. Update last_button_press_time.
-  last_button_press_time = current_time;
-  // 2. Toggle speed_state between 0 and 1.
-  speed_state = !speed_state;
-  // 3. Call change_timer_period() with 500 or 1000.
-  if(speed_state){
-    change_timer_period(500);
-  }
-  else{
-    change_timer_period(1000);
-  }
-}
+    // Only do state changes after the debounce window has elapsed
+    if ((current_time - last_button_press_time) > DEBOUNCE_MS) {
+        if (button_pressed && !button_last_state) {
+            last_button_press_time = current_time;
+            speed_state = !speed_state;
+            
+            if (speed_state) {
+                change_timer_period(500);  // Fast mode (0.5s)
+            } else {
+                change_timer_period(1000); // Slow mode (1.0s)
+            }
+        }
+        // Update stored state
+        button_last_state = button_pressed;
+    }
 }
 /* USER CODE END 0 */
 
